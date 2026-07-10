@@ -1,0 +1,44 @@
+test/browser.test.ts
+  s_6d12e569c0e2dd::t_f9f6f3f72c896b 1-110
+src/strategies/release.ts
+  s_6d12e569c0e2dd::t_c7234d2ca03609 84
+  s_6d12e569c0e2dd::t_975b3df48a46b0 16
+src/embed.ts
+  s_6d12e569c0e2dd::t_d0aac9d0a2609a 38,44-49,51,60,62-66,81
+  s_6d12e569c0e2dd::t_535271aee37994 8
+src/strategies/hidden-ref.ts
+  s_6d12e569c0e2dd::t_02c0bab0653822 141-150,153,158,165
+  s_6d12e569c0e2dd::t_2999663c31b52b 126
+  s_6d12e569c0e2dd::t_ff9177768f5e0f 105
+  s_6d12e569c0e2dd::t_0fc6b5beb8b0a3 70-72
+  s_6d12e569c0e2dd::t_a9e0a9205189e2 15
+test/release.test.ts
+  s_6d12e569c0e2dd::t_9aa0c5e6b5d53a 1-181
+src/context.ts
+  s_6d12e569c0e2dd::t_0e41731aa0a312 24-26,30,33,39
+  s_6d12e569c0e2dd::t_e7c9df38fd9157 8
+src/strategies/browser.ts
+  s_6d12e569c0e2dd::t_e251ba7d052d17 38
+  s_6d12e569c0e2dd::t_716673abf09e23 90-100
+  s_6d12e569c0e2dd::t_84d18e6527bbfb 275,455
+src/gh.ts
+  s_6d12e569c0e2dd::t_177cfc0eae8d02 1-120
+test/hidden-ref.test.ts
+  s_6d12e569c0e2dd::t_324d5d5c8982c9 1-199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0c636985ef31ceb812919815ddb4fa4ab30a6123",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
