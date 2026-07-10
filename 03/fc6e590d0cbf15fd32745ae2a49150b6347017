@@ -1,0 +1,24 @@
+docs/index.html
+  s_1d40df5a34b2f1::t_c9233ae43c154c 32,44,62,75-77,82-83,86,106-108,171-189,195,242-252,257-258,314,324-325,327-337,340-357,361-366,368-377,381,387-390,413-435,437-438,444,456,460,465,481,539,605-607,613,630,635,645,647,649-653,655-658,660-663,673-675,678-713,719-750,756,765,798,800-829,838,843,845-846,887-888,890,906,908
+  s_1d40df5a34b2f1::t_c070e05c796cbc 436
+  s_1d40df5a34b2f1::t_c607f85a6222b3 830
+  s_1d40df5a34b2f1::t_faeb2ec216ee43 358-360
+docs/IMAGE_PROMPTS.md
+  s_1d40df5a34b2f1::t_65cb0c7dd277fa 60-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "03fc6e590d0cbf15fd32745ae2a49150b6347017",
+  "prompts": {},
+  "sessions": {
+    "s_1d40df5a34b2f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f8bde2b-3e77-432f-9ec1-c0f90c7ff263",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
