@@ -1,0 +1,19 @@
+docs/index.html
+  s_1d40df5a34b2f1::t_1076a9fd5e7fcc 602
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5d3e7ad9ae126bcaa97f54e6c7a0d5e5d9a6772e",
+  "prompts": {},
+  "sessions": {
+    "s_1d40df5a34b2f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f8bde2b-3e77-432f-9ec1-c0f90c7ff263",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
