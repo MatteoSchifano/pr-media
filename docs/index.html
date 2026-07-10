@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>pr-media: Upload images & GIFs into GitHub PRs automatically</title>
+<meta name="description" content="Attach images, GIFs, and videos to a GitHub pull request from a script, a CI job, or an AI agent. No browser cookies, no API that doesn't exist. Three strategies with automatic fallback.">
+<link rel="canonical" href="https://matteoschifano.github.io/gh-pr-media/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="pr-media: Upload images & GIFs into GitHub PRs automatically">
+<meta property="og:description" content="Attach media to a GitHub PR from a script, CI job, or AI agent. No browser cookies, no API that doesn't exist. Three strategies, automatic fallback.">
+<meta property="og:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="pr-media: Upload images & GIFs into GitHub PRs automatically">
+<meta name="twitter:description" content="Attach media to a GitHub PR without ever touching a session cookie.">
+<meta name="twitter:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D1524'/%3E%3Crect x='4.5' y='4.5' width='23' height='23' rx='5.5' fill='none' stroke='%237FA7E8' stroke-width='1.5'/%3E%3Cpath d='M10 12l4 4-4 4' fill='none' stroke='%23E6EBF4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M17 20h5' stroke='%23E6EBF4' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+
+    /* Palette — extracted from the README hero (GitHub-dark, navy + azure) */
+    --bg:            #0A0F1A;
+    --bg-2:          #0D1524;
+    --surface:       #111A2B;
+    --surface-2:     #0E1626;
+    --line:          rgba(233, 238, 247, 0.09);
+    --line-strong:   rgba(233, 238, 247, 0.16);
+    --text:          #E6EBF4;
+    --text-dim:      #9AA7BA;
+    --text-faint:    #8A98AD;
+    --accent:        #7FA7E8;
+    --accent-bright: #A8C4F2;
+    --accent-deep:   #4E77BE;
+    --accent-btm:    #5E88CE;
+    --glow:          rgba(127, 167, 232, 0.35);
+    --ok:            #6FD3A4;
+    --warn:          #E8C57F;
+
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --maxw: 1120px;
+    --radius: 14px;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ambient field — the soft radial glow of the hero, fixed behind content */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(1100px 620px at 78% -6%, rgba(78, 119, 190, 0.22), transparent 60%),
+      radial-gradient(900px 500px at 6% 8%, rgba(127, 167, 232, 0.08), transparent 55%),
+      linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 42%, var(--bg) 100%);
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-bright); }
+  h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0; font-weight: 700; }
+  p { margin: 0; }
+  code, kbd, pre { font-family: var(--mono); }
+
+  .wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: 24px; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .skip {
+    position: absolute; left: -9999px; top: 0;
+    background: var(--surface); color: var(--text);
+    padding: 10px 16px; border-radius: 8px; z-index: 100;
+  }
+  .skip:focus { left: 16px; top: 16px; }
+
+  /* ---- Nav ---- */
+  header.nav {
+    position: sticky; top: 0; z-index: 40;
+    backdrop-filter: saturate(140%) blur(10px);
+    background: rgba(10, 15, 26, 0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-in { display: flex; align-items: center; gap: 18px; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: -0.02em; font-size: 1.05rem; color: var(--text); }
+  .brand svg { width: 26px; height: 26px; display: block; }
+  .nav-links { margin-left: auto; display: flex; align-items: center; gap: 26px; }
+  .nav-links a { color: var(--text-dim); font-size: 0.92rem; font-weight: 500; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.is-active { color: var(--text); }
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 15px; border-radius: 9px;
+    border: 1px solid var(--line-strong);
+    color: var(--text) !important; font-weight: 600; font-size: 0.9rem;
+    transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  }
+  .nav-cta:hover { border-color: var(--accent); background: rgba(127, 167, 232, 0.08); }
+  .nav-cta svg { width: 16px; height: 16px; }
+  .nav-links a[href^="#"] { position: relative; }
+  .nav-links a[href^="#"].is-active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -21px;
+    height: 2px; background: var(--accent); border-radius: 2px 2px 0 0;
+  }
+  /* Under 720px the section anchors stay reachable in a horizontally scrollable rail */
+  @media (max-width: 720px) {
+    .nav-links {
+      margin-left: 14px; gap: 18px; min-width: 0;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; -ms-overflow-style: none;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 20px), transparent 100%);
+              mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 20px), transparent 100%);
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { flex: none; white-space: nowrap; }
+    .nav-links a[href^="#"].is-active::after { bottom: -19px; }
+    .nav-cta { padding: 7px 12px; font-size: 0.86rem; }
+  }
+
+  /* ---- Buttons ---- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 12px 20px; border-radius: 11px;
+    font-weight: 600; font-size: 0.96rem; font-family: var(--sans);
+    cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.2s var(--ease-out), background 0.2s var(--ease-out), border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  }
+  .btn svg { width: 18px; height: 18px; }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-btm) 100%);
+    color: #06101f;
+    box-shadow: 0 6px 24px -8px var(--glow), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .btn-primary:hover { color: #06101f; transform: translateY(-1px); box-shadow: 0 10px 34px -8px var(--glow), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .btn-ghost { background: rgba(233,238,247,0.03); border-color: var(--line-strong); color: var(--text); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); background: rgba(127,167,232,0.08); }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.01em;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--text-dim);
+    background: rgba(233,238,247,0.02);
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ---- Section scaffolding ---- */
+  main > section { padding-block: clamp(64px, 9vw, 104px); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 14px;
+  }
+  .section-head { max-width: 640px; margin-bottom: 44px; }
+  .section-head h2 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); }
+  .section-head p { color: var(--text-dim); margin-top: 14px; font-size: 1.05rem; max-width: 62ch; }
+
+  /* ---- Hero ---- */
+  .hero { padding-top: clamp(48px, 7vw, 84px); padding-bottom: clamp(40px, 6vw, 68px); }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 52px; align-items: center; }
+  @media (max-width: 940px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 6.2vw, 4rem);
+    letter-spacing: -0.035em; font-weight: 800;
+  }
+  .hero .tagline { font-size: clamp(1.1rem, 2.4vw, 1.4rem); color: var(--text); margin-top: 18px; font-weight: 500; max-width: 20ch; }
+  .hero .lede { color: var(--text-dim); margin-top: 18px; font-size: 1.05rem; max-width: 54ch; }
+
+  .install-line {
+    margin-top: 30px; display: flex; align-items: stretch;
+    max-width: 440px;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    border-radius: 12px; overflow: hidden;
+    font-family: var(--mono); font-size: 0.94rem;
+  }
+  .install-line .prompt { display: flex; align-items: center; gap: 10px; padding: 13px 8px 13px 16px; color: var(--text); white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .install-line .prompt::-webkit-scrollbar { display: none; }
+  .install-line .prompt .sigil { color: var(--accent); user-select: none; }
+  .copy-btn {
+    margin-left: auto; padding: 0 16px; border: none; border-left: 1px solid var(--line);
+    background: rgba(127,167,232,0.06); color: var(--text-dim); cursor: pointer;
+    font-family: var(--sans); font-size: 0.82rem; font-weight: 600; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  }
+  .copy-btn:hover { color: var(--text); background: rgba(127,167,232,0.12); }
+  .copy-btn.copied { color: var(--ok); }
+  .copy-btn svg { width: 15px; height: 15px; }
+
+  .hero-cta { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .hero-badges { margin-top: 28px; }
+
+  .hero-art {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,0.8);
+  }
+  .hero-art img { display: block; width: 100%; height: auto; }
+
+  /* ---- Terminal ---- */
+  .terminal-wrap { margin-top: 8px; }
+  .terminal {
+    background: linear-gradient(180deg, #0C1422 0%, #0A111D 100%);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 70px -34px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.04);
+    overflow: hidden;
+    max-width: 860px; margin-inline: auto;
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 15px; border-bottom: 1px solid var(--line);
+    background: rgba(233,238,247,0.015);
+  }
+  .term-bar .lights { display: flex; gap: 8px; }
+  .term-bar .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .term-bar .lights i:nth-child(1) { background: #E1685C; }
+  .term-bar .lights i:nth-child(2) { background: #E3B04E; }
+  .term-bar .lights i:nth-child(3) { background: #62C25A; }
+  .term-bar .title { margin-left: 10px; font-family: var(--mono); font-size: 0.8rem; color: var(--text-faint); }
+  .term-replay {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 7px; border: 1px solid var(--line);
+    background: transparent; color: var(--text-faint); cursor: pointer;
+    font-family: var(--mono); font-size: 0.74rem; font-weight: 600;
+    transition: color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  }
+  .term-replay:hover { color: var(--text); border-color: var(--accent); background: rgba(127,167,232,0.08); }
+  .term-replay svg { width: 13px; height: 13px; }
+  .term-body {
+    padding: 20px 22px 24px;
+    font-family: var(--mono); font-size: 0.86rem; line-height: 1.75;
+    min-height: 280px;
+    overflow-x: auto;
+  }
+  .term-body pre { margin: 0; white-space: pre; }
+  .term-line { display: block; }
+  .t-prompt { color: var(--accent); }
+  .t-cmd { color: var(--text); }
+  .t-flag { color: var(--accent-bright); }
+  .t-dim { color: var(--text-faint); }
+  .t-ok { color: var(--ok); }
+  .t-marker { color: var(--text-faint); }
+  .t-md-name { color: var(--accent-bright); }
+  .t-url { color: var(--text-dim); }
+  .cursor {
+    display: inline-block; width: 8px; height: 1.05em; vertical-align: text-bottom;
+    background: var(--accent); margin-left: 2px;
+    animation: blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---- Problem (numbered editorial prose, no cards) ---- */
+  .problem-prose { max-width: 880px; }
+  .problem-row {
+    display: grid; grid-template-columns: auto 1fr; gap: 22px 28px;
+    padding: 30px 0; align-items: start;
+  }
+  .problem-row + .problem-row { border-top: 1px solid var(--line); }
+  .problem-num {
+    font-family: var(--mono); font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: 0.01em;
+  }
+  .problem-body h3 { font-size: 1.14rem; margin-bottom: 9px; }
+  .problem-body p { color: var(--text-dim); font-size: 1rem; max-width: 66ch; }
+  .problem-body code { color: var(--accent-bright); background: rgba(127,167,232,0.1); padding: 1px 6px; border-radius: 5px; font-size: 0.86em; }
+  @media (max-width: 560px) { .problem-row { grid-template-columns: 1fr; gap: 8px; } }
+
+  /* ---- Strategies ---- */
+  .strat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .strat-grid { grid-template-columns: 1fr; } }
+  .strat {
+    display: flex; flex-direction: column;
+    padding: 26px 24px; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--surface);
+    transition: border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  }
+  .strat:hover { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(127,167,232,0.25), 0 18px 50px -30px var(--glow); transform: translateY(-3px); }
+  .strat-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .strat-icon {
+    width: 40px; height: 40px; flex: none; border-radius: 10px;
+    display: grid; place-items: center;
+    background: rgba(127,167,232,0.1); border: 1px solid var(--line-strong);
+    color: var(--accent);
+  }
+  .strat-icon svg { width: 20px; height: 20px; }
+  .strat-head code { font-family: var(--mono); font-size: 1.02rem; color: var(--text); font-weight: 600; }
+  .strat .role { font-size: 0.82rem; color: var(--accent); font-weight: 600; margin-bottom: 16px; }
+  .strat dl { margin: 0; display: grid; gap: 12px; }
+  .strat dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-faint); font-weight: 600; margin-bottom: 3px; }
+  .strat dd { margin: 0; font-size: 0.9rem; color: var(--text-dim); }
+  .strat dd code { font-family: var(--mono); font-size: 0.82em; color: var(--accent-bright); word-break: break-all; }
+  .strat .when {
+    margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 0.9rem; color: var(--text); font-weight: 500;
+  }
+  .privacy-tag { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .privacy-inherit { background: rgba(111,211,164,0.12); color: var(--ok); }
+  .privacy-public { background: rgba(232,197,127,0.12); color: var(--warn); }
+
+  /* Fallback chain */
+  .chain {
+    margin-top: 40px; padding: 26px 24px; border-radius: var(--radius);
+    border: 1px dashed var(--line-strong); background: var(--surface-2);
+  }
+  .chain h3 { font-size: 1.02rem; display: flex; align-items: center; gap: 10px; }
+  .chain h3 code { font-family: var(--mono); color: var(--accent-bright); font-size: 0.92em; background: rgba(127,167,232,0.1); padding: 2px 8px; border-radius: 6px; }
+  .chain p { color: var(--text-dim); font-size: 0.92rem; margin-top: 6px; }
+  .chain-flow { margin-top: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-family: var(--mono); font-size: 0.9rem; }
+  .chain-node {
+    padding: 8px 14px; border-radius: 9px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--text);
+  }
+  .chain-arrow { color: var(--accent); width: 26px; height: 18px; flex: none; }
+  /* Default (and reduced-motion): arrows drawn, no animation. Motion is opt-in below. */
+  .chain-arrow path { stroke-dasharray: 30; stroke-dashoffset: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .chain-arrow path { stroke-dashoffset: 30; }
+    .reveal.is-in .chain-arrow path { animation: draw 0.5s var(--ease-out) forwards; }
+    .reveal.is-in .chain-arrow:nth-of-type(2) path { animation-delay: 0.15s; }
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  /* ---- Security (ledger: aligned checkmarks, hairline dividers, no boxes) ---- */
+  .sec-ledger { border-top: 1px solid var(--line-strong); }
+  .sec-row {
+    display: grid; grid-template-columns: 26px 1fr; gap: 8px 18px;
+    padding: 22px 2px; border-bottom: 1px solid var(--line); align-items: start;
+  }
+  .sec-row .mark { flex: none; color: var(--ok); margin-top: 2px; }
+  .sec-row .mark svg { width: 20px; height: 20px; display: block; }
+  .sec-row h3 { font-size: 1.02rem; margin-bottom: 5px; }
+  .sec-row p { color: var(--text-dim); font-size: 0.94rem; max-width: 74ch; grid-column: 2; }
+  .sec-row code { font-family: var(--mono); color: var(--accent-bright); font-size: 0.85em; background: rgba(127,167,232,0.08); padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 560px) { .sec-row { grid-template-columns: 22px 1fr; gap: 6px 14px; } .sec-row p { grid-column: 1 / -1; } }
+  .sec-callout {
+    margin-bottom: 36px; padding: 20px 24px; border-radius: var(--radius);
+    border: 1px solid var(--line-strong); background: rgba(232,197,127,0.05);
+    color: var(--text-dim); font-size: 0.98rem; max-width: 76ch;
+  }
+  .sec-callout strong { color: var(--text); font-weight: 600; }
+
+  /* ---- Agents ---- */
+  .agents-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  .agents-grid > * { min-width: 0; }
+  @media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; gap: 32px; } }
+  .agents-copy ul { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 16px; }
+  .agents-copy li { display: flex; gap: 12px; color: var(--text-dim); font-size: 0.98rem; }
+  .agents-copy li svg { width: 18px; height: 18px; flex: none; margin-top: 4px; color: var(--accent); }
+  .agents-copy li b { color: var(--text); font-weight: 600; }
+
+  /* Code block */
+  .codeblock {
+    border-radius: var(--radius); border: 1px solid var(--line-strong);
+    background: var(--surface-2); overflow: hidden;
+  }
+  .codeblock .cb-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem; color: var(--text-faint);
+  }
+  .codeblock pre { margin: 0; padding: 16px 18px; font-size: 0.82rem; line-height: 1.7; color: var(--text-dim); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .codeblock pre .k { color: var(--accent-bright); }
+  .codeblock pre .s { color: var(--ok); }
+  .codeblock pre .p { color: var(--text-faint); }
+  .cb-copy { background: none; border: none; cursor: pointer; color: var(--text-faint); font-family: var(--sans); font-size: 0.78rem; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .cb-copy:hover { color: var(--text); }
+  .cb-copy.copied { color: var(--ok); }
+  .cb-copy svg { width: 14px; height: 14px; }
+
+  .oneliner {
+    margin-top: 20px; display: flex; align-items: stretch;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    border-radius: 11px; overflow: hidden; font-family: var(--mono); font-size: 0.82rem;
+  }
+  .oneliner .prompt { padding: 12px 14px; color: var(--text-dim); overflow-x: auto; white-space: nowrap; scrollbar-width: none; min-width: 0; flex: 1; }
+  .oneliner .prompt::-webkit-scrollbar { display: none; }
+  .oneliner .prompt .sigil { color: var(--accent); }
+
+  /* ---- Install tabs ---- */
+  .tabs { border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: var(--surface-2); max-width: 760px; }
+  .tab-bar { display: flex; border-bottom: 1px solid var(--line); background: rgba(233,238,247,0.015); }
+  .tab-btn {
+    flex: 1; padding: 14px 10px; background: none; border: none; cursor: pointer;
+    font-family: var(--mono); font-size: 0.86rem; color: var(--text-faint); font-weight: 600;
+    border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .tab-btn:hover { color: var(--text-dim); }
+  .tab-btn[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); background: rgba(127,167,232,0.05); }
+  .tab-panel { padding: 22px 22px 24px; }
+  .tab-panel[hidden] { display: none; }
+  .tab-panel .desc { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 14px; }
+  .tab-cmd {
+    display: flex; align-items: stretch; background: #08101d; border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; font-family: var(--mono); font-size: 0.86rem;
+  }
+  .tab-cmd .prompt { padding: 12px 14px; color: var(--text); overflow-x: auto; white-space: nowrap; scrollbar-width: none; flex: 1; }
+  .tab-cmd .prompt::-webkit-scrollbar { display: none; }
+  .tab-cmd .prompt .sigil { color: var(--accent); }
+  .req-note { margin-top: 16px; font-size: 0.86rem; color: var(--text-faint); }
+  .req-note code { color: var(--accent-bright); }
+
+  /* ---- Demo video ---- */
+  .demo-video {
+    display: block; width: 100%; height: auto; max-width: 900px; margin-inline: auto;
+    aspect-ratio: 16 / 9; background: #0A111D;
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    box-shadow: 0 24px 70px -34px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  /* ---- Footer ---- */
+  footer {
+    border-top: 1px solid var(--line); padding-block: 56px 40px;
+    background: rgba(8, 12, 22, 0.5);
+  }
+  .foot-grid { display: flex; flex-wrap: wrap; gap: 40px 60px; justify-content: space-between; }
+  .foot-brand { max-width: 300px; }
+  .foot-brand .brand { margin-bottom: 12px; }
+  .foot-brand p { color: var(--text-dim); font-size: 0.9rem; }
+  .foot-cols { display: flex; gap: 56px; flex-wrap: wrap; }
+  .foot-col h3 { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-faint); font-weight: 600; margin-bottom: 14px; }
+  .foot-col a { display: block; color: var(--text-dim); font-size: 0.92rem; padding: 4px 0; }
+  .foot-col a:hover { color: var(--text); }
+  .foot-bottom {
+    margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: space-between; align-items: center;
+    color: var(--text-faint); font-size: 0.86rem;
+  }
+  .foot-bottom a { color: var(--text-dim); }
+  .foot-bottom a:hover { color: var(--text); }
+
+  /* ---- Reveal on scroll (gated on .js so content stays visible without JS) ---- */
+  .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
+  .js .reveal.is-in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .cursor { animation: none; }
+    .chain-arrow path { stroke-dashoffset: 0; animation: none; }
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="brand" aria-label="pr-media home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="1.5" width="29" height="29" rx="7" fill="none" stroke="#7FA7E8" stroke-width="1.4"/><path d="M9 12l4 4-4 4" fill="none" stroke="#E6EBF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 20h6" stroke="#E6EBF4" stroke-width="2" stroke-linecap="round"/></svg>
+      pr-media
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#strategies">Strategies</a>
+      <a href="#security">Security</a>
+      <a href="#agents">Agents</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/MatteoSchifano/gh-pr-media" target="_blank" rel="noopener" class="nav-cta">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <span id="top"></span>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <div class="hero-grid">
+      <div>
+        <div class="badges hero-badges-top" style="margin-bottom:20px">
+          <span class="badge"><span class="dot" style="background:var(--ok)"></span>Cookie-free by design</span>
+          <span class="badge">TypeScript · Node CLI</span>
+        </div>
+        <h1 id="hero-title">pr-media</h1>
+        <p class="tagline">Upload images &amp; GIFs into GitHub PRs, automatically.</p>
+        <p class="lede">Attach images, GIFs, and videos to a GitHub pull request from a script, a CI job, or an AI agent. No browser cookies, no API that doesn't exist.</p>
+
+        <div class="install-line" role="group" aria-label="Install command">
+          <span class="prompt"><span class="sigil">$</span> npm install -g pr-media</span>
+          <button class="copy-btn" type="button" data-copy="npm install -g pr-media" aria-label="Copy install command">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>
+            <span class="copy-label">Copy</span>
+          </button>
+        </div>
+
+        <div class="hero-cta">
+          <a href="https://github.com/MatteoSchifano/gh-pr-media" target="_blank" rel="noopener" class="btn btn-primary">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            View on GitHub
+          </a>
+          <a href="https://www.npmjs.com/package/pr-media" target="_blank" rel="noopener" class="btn btn-ghost">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 2v12h6V5h3v9h7V2H0Zm14.5 10.5H13V3.5h-1.5v9h-4v-9H1.5V12.5H3V6.5h1.5v6H6V3.5h8.5v9Z"/></svg>
+            npm
+          </a>
+        </div>
+
+        <div class="badges hero-badges">
+          <a class="badge" href="https://github.com/MatteoSchifano/gh-pr-media/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--text-dim)"><span class="dot" style="background:var(--warn)"></span>MIT License</a>
+          <a class="badge" href="https://github.com/MatteoSchifano/gh-pr-media/actions/workflows/ci.yml" target="_blank" rel="noopener" style="color:var(--text-dim)"><span class="dot" style="background:var(--ok)"></span>CI passing</a>
+        </div>
+      </div>
+
+      <div class="hero-art reveal">
+        <!-- Hero illustration (also used as og:image). See IMAGE_PROMPTS.md #1 for a bespoke replacement. -->
+        <img src="assets/hero.png" width="1672" height="941" alt="pr-media uploads image, GIF, and video files into a GitHub pull request comment, choosing between the browser, hidden-ref, and release strategies." loading="eager" decoding="async">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TERMINAL ============ -->
+  <section aria-labelledby="term-title" style="padding-top:clamp(20px,3vw,40px)">
+    <div class="wrap">
+      <div class="section-head reveal" style="text-align:center;max-width:660px;margin-inline:auto">
+        <p class="eyebrow">One command</p>
+        <h2 id="term-title">From a file on disk to a rendered PR comment</h2>
+        <p style="margin-inline:auto">Point it at some files and a PR. pr-media validates them, picks a strategy, uploads, and posts the markdown, all from the command line.</p>
+      </div>
+
+      <div class="terminal-wrap reveal">
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+            <span class="title" aria-hidden="true">zsh — pr-media</span>
+            <button class="term-replay" type="button" id="term-replay" aria-label="Replay the terminal animation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"/><path d="M3 20v-5h5"/></svg>
+              <span>replay</span>
+            </button>
+          </div>
+          <div class="term-body" role="img" aria-label="Terminal session: running pr-media add screenshot.png demo.gif --pr 42 prints a pr-media markdown block containing two image links produced by the hidden-ref strategy."><pre id="term-out" aria-hidden="true"></pre></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE PROBLEM ============ -->
+  <section id="problem" aria-labelledby="problem-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">The problem</p>
+        <h2 id="problem-title">Getting media into a PR is harder than it should be</h2>
+        <p>Dragging a screenshot into the web composer is easy. Doing it from a script, a runner, or an agent is where GitHub leaves you stranded.</p>
+      </div>
+      <div class="problem-prose">
+        <div class="problem-row reveal">
+          <span class="problem-num" aria-hidden="true">01</span>
+          <div class="problem-body">
+            <h3>There is no API for it</h3>
+            <p>GitHub has no public REST or GraphQL endpoint to mint the <code>user-attachments/assets</code> URLs the web UI hands out. "Just call the API" isn't an option.</p>
+          </div>
+        </div>
+        <div class="problem-row reveal">
+          <span class="problem-num" aria-hidden="true">02</span>
+          <div class="problem-body">
+            <h3>The web endpoint wants a cookie</h3>
+            <p>The internal upload endpoint only accepts a browser session cookie. A personal access token gets a flat <code>422</code>. It's a deliberate anti-abuse boundary.</p>
+          </div>
+        </div>
+        <div class="problem-row reveal">
+          <span class="problem-num" aria-hidden="true">03</span>
+          <div class="problem-body">
+            <h3>Existing tools steal that cookie</h3>
+            <p>The workarounds extract your <code>user_session</code> cookie and replay it, handing out a bearer credential for your entire GitHub account. pr-media doesn't.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STRATEGIES ============ -->
+  <section id="strategies" aria-labelledby="strat-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Three strategies</p>
+        <h2 id="strat-title">Pick a URL shape, or let <code style="font-size:0.8em;color:var(--accent-bright)">auto</code> choose</h2>
+        <p>Each strategy makes a different, honest tradeoff between the URL it produces and the privacy it inherits. All three are cookie-free.</p>
+      </div>
+
+      <div class="strat-grid">
+        <!-- browser -->
+        <div class="strat reveal">
+          <div class="strat-head">
+            <span class="strat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg></span>
+            <code>browser</code>
+          </div>
+          <p class="role">Same URL a human would get</p>
+          <dl>
+            <div><dt>Auth</dt><dd>Your own already-logged-in browser (<code>agent-browser</code> or Chrome DevTools Protocol). The session is driven, never read.</dd></div>
+            <div><dt>Produces</dt><dd><code>github.com/user-attachments/assets/&lt;uuid&gt;</code></dd></div>
+            <div><dt>Privacy</dt><dd><span class="privacy-tag privacy-inherit">Inherits the PR's ACL</span></dd></div>
+          </dl>
+          <p class="when">Interactive, local use when you want the exact same URL a human dragging a file in would produce.</p>
+        </div>
+
+        <!-- hidden-ref -->
+        <div class="strat reveal">
+          <div class="strat-head">
+            <span class="strat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.4 7.2 15.6 11M8.4 16.8 15.6 13"/></svg></span>
+            <code>hidden-ref</code>
+          </div>
+          <p class="role">The default for automation</p>
+          <dl>
+            <div><dt>Auth</dt><dd>Scoped <code>gh</code> token (PAT / OAuth / <code>GITHUB_TOKEN</code>) via the Git Data API. No browser.</dd></div>
+            <div><dt>Produces</dt><dd><code>…/blob/&lt;sha&gt;/file?raw=true</code></dd></div>
+            <div><dt>Privacy</dt><dd><span class="privacy-tag privacy-inherit">Inherits the repo's ACL</span></dd></div>
+          </dl>
+          <p class="when">Most workflows, including CI, with no interactive browser required.</p>
+        </div>
+
+        <!-- release -->
+        <div class="strat reveal">
+          <div class="strat-head">
+            <span class="strat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.5 12 12 20.5 3.5 12V4a.5.5 0 0 1 .5-.5h8Z"/><circle cx="8" cy="8" r="1.6"/></svg></span>
+            <code>release</code>
+          </div>
+          <p class="role">Public, cacheable URLs</p>
+          <dl>
+            <div><dt>Auth</dt><dd>Scoped <code>gh</code> token via a dedicated prerelease's assets. No browser.</dd></div>
+            <div><dt>Produces</dt><dd><code>…/releases/download/…</code></dd></div>
+            <div><dt>Privacy</dt><dd><span class="privacy-tag privacy-public">Always public</span></dd></div>
+          </dl>
+          <p class="when">CI on public repos, or anywhere you explicitly want a public, cacheable URL.</p>
+        </div>
+      </div>
+
+      <!-- Fallback chain -->
+      <div class="chain reveal">
+        <h3>The <code>auto</code> fallback chain</h3>
+        <p>By default, pr-media tries strategies in order and falls back to the next on failure. The order adapts to the environment (a headless CI runner has no interactive browser).</p>
+        <div class="chain-flow" aria-label="Outside CI, the auto order is browser, then hidden-ref, then release">
+          <span class="chain-node">browser</span>
+          <svg class="chain-arrow" viewBox="0 0 26 18" fill="none" aria-hidden="true"><path d="M2 9h18m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="chain-node">hidden-ref</span>
+          <svg class="chain-arrow" viewBox="0 0 26 18" fill="none" aria-hidden="true"><path d="M2 9h18m0 0-5-5m5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="chain-node">release</span>
+          <span style="color:var(--text-faint);margin-left:8px;font-size:0.82rem">outside CI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECURITY ============ -->
+  <section id="security" aria-labelledby="sec-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Security model</p>
+        <h2 id="sec-title">It never reads a cookie store. Not once.</h2>
+      </div>
+      <div class="sec-callout reveal">
+        A stolen <strong>session cookie is a bearer credential for your entire GitHub account</strong>, not scoped to a repo or an expiry window the way a PAT or <code style="font-family:var(--mono);color:var(--accent-bright)">gh</code> token is. Extracting it means reading the browser's cookie store and passing it around, through shell history, logs, temp files. pr-media closes that path entirely.
+      </div>
+      <div class="sec-ledger">
+        <div class="sec-row reveal">
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <h3>Only scoped, <code>gh</code>-managed tokens</h3>
+          <p>Every non-interactive call goes through the <code>gh</code> CLI. Authentication is entirely <code>gh</code>'s problem. pr-media never writes a token to disk or logs one.</p>
+        </div>
+        <div class="sec-row reveal">
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <h3>The browser strategy reuses your session, never reads it</h3>
+          <p>It stages a file on the composer's input, reads back the URL GitHub inserts, clears the textarea, and <strong style="color:var(--text)">never clicks Comment</strong>.</p>
+        </div>
+        <div class="sec-row reveal">
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <h3>A CI guard enforces it</h3>
+          <p>A <code>security-guard</code> check fails the build if cookie-related patterns (<code>document.cookie</code>, <code>context.cookies()</code>, cookie stores) show up under <code>src/</code>.</p>
+        </div>
+        <div class="sec-row reveal">
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <h3><code>execFile</code>, never a shell</h3>
+          <p>External commands get their arguments as an argv array, never a shell string. No command injection via file paths, PR URLs, or repo names.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENTS ============ -->
+  <section id="agents" aria-labelledby="agents-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Built for AI agents</p>
+        <h2 id="agents-title">Parseable output, a dry run, and a ready-made skill</h2>
+      </div>
+      <div class="agents-grid">
+        <div class="agents-copy reveal">
+          <p style="color:var(--text-dim);max-width:52ch">pr-media ships an agent skill that teaches a coding agent which strategy to pick and how to read the output. Agents default to <code style="font-family:var(--mono);color:var(--accent-bright)">--json</code> and can combine it with <code style="font-family:var(--mono);color:var(--accent-bright)">--dry-run</code> to preview a plan before touching anything.</p>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 17 6-6-6-6M12 19h8"/></svg><span><b>Structured output.</b> <code style="font-family:var(--mono)">--json</code> returns an array of <code style="font-family:var(--mono)">{ name, url, markdown, strategy }</code>. No text to scrape.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><span><b>Dry-run first.</b> <code style="font-family:var(--mono)">--dry-run</code> validates files and resolves the PR without uploading or touching it.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v12H4zM8 20h8M12 16v4"/></svg><span><b>Drop-in skill.</b> One command installs the skill into a Claude Code agent.</span></li>
+          </ul>
+          <div class="oneliner" role="group" aria-label="Install the agent skill">
+            <span class="prompt"><span class="sigil">$</span> npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media</span>
+            <button class="copy-btn" type="button" data-copy="npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media" aria-label="Copy skill install command" style="border-left:1px solid var(--line)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="codeblock reveal">
+          <div class="cb-bar">
+            <span>pr-media add diff.png --pr-url … --json</span>
+            <button class="cb-copy" type="button" data-copy='pr-media add diff.png --pr-url https://github.com/acme/app/pull/42 --json' aria-label="Copy JSON example command">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>
+              <span class="copy-label">Copy</span>
+            </button>
+          </div>
+<pre><span class="p">$</span> pr-media add diff.png <span class="k">--pr-url</span> …/pull/42 <span class="k">--json</span>
+[
+  {
+    <span class="k">"name"</span>: <span class="s">"diff.png"</span>,
+    <span class="k">"url"</span>: <span class="s">"https://github.com/acme/app/blob/8f2a1/diff.png?raw=true"</span>,
+    <span class="k">"markdown"</span>: <span class="s">"![diff.png](…/blob/8f2a1/diff.png?raw=true)"</span>,
+    <span class="k">"strategy"</span>: <span class="s">"hidden-ref"</span>
+  }
+]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEMO VIDEO ============ -->
+  <section id="demo" aria-labelledby="demo-title">
+    <div class="wrap">
+      <div class="section-head reveal" style="text-align:center;max-width:640px;margin-inline:auto">
+        <p class="eyebrow">See it run</p>
+        <h2 id="demo-title">Watch a real upload land in a PR</h2>
+        <p style="margin-inline:auto">A screen recording of one <code style="font-family:var(--mono);color:var(--accent-bright)">pr-media add</code> command uploading an image to a live pull request, from the prompt to the rendered comment.</p>
+      </div>
+      <div class="reveal">
+        <video class="demo-video" controls preload="metadata" playsinline poster="assets/demo-poster.png" width="1600" height="900" aria-label="Screen recording of the pr-media CLI uploading an image to a GitHub pull request and posting the rendered comment.">
+          <source src="assets/demo.webm" type="video/webm">
+          <source src="assets/demo.mp4" type="video/mp4">
+          <p style="padding:20px;color:var(--text-dim)">Your browser doesn't support embedded video. <a href="assets/demo.mp4">Download the demo</a>.</p>
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Install</p>
+        <h2 id="install-title">Three ways in</h2>
+        <p>Requires <code style="font-family:var(--mono);color:var(--accent-bright)">gh</code>, authenticated with <code style="font-family:var(--mono);color:var(--accent-bright)">gh auth login</code>. No bundled browser; <code style="font-family:var(--mono);color:var(--accent-bright)">playwright-core</code> is optional, only for the CDP browser backend.</p>
+      </div>
+
+      <div class="tabs reveal">
+        <div class="tab-bar" role="tablist" aria-label="Installation methods">
+          <button class="tab-btn" role="tab" id="tab-npm" aria-controls="panel-npm" aria-selected="true">npm global</button>
+          <button class="tab-btn" role="tab" id="tab-npx" aria-controls="panel-npx" aria-selected="false" tabindex="-1">npx</button>
+          <button class="tab-btn" role="tab" id="tab-gh" aria-controls="panel-gh" aria-selected="false" tabindex="-1">gh extension</button>
+        </div>
+
+        <div class="tab-panel" id="panel-npm" role="tabpanel" aria-labelledby="tab-npm">
+          <p class="desc">Install once, get the <code style="font-family:var(--mono)">pr-media</code> binary on your PATH.</p>
+          <div class="tab-cmd">
+            <span class="prompt"><span class="sigil">$</span> npm install -g pr-media</span>
+            <button class="copy-btn" type="button" data-copy="npm install -g pr-media" aria-label="Copy npm install command" style="border-left:1px solid var(--line)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg><span class="copy-label">Copy</span></button>
+          </div>
+          <p class="req-note">Then: <code>pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42</code></p>
+        </div>
+
+        <div class="tab-panel" id="panel-npx" role="tabpanel" aria-labelledby="tab-npx" hidden>
+          <p class="desc">Run it without installing anything.</p>
+          <div class="tab-cmd">
+            <span class="prompt"><span class="sigil">$</span> npx pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42</span>
+            <button class="copy-btn" type="button" data-copy="npx pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42" aria-label="Copy npx command" style="border-left:1px solid var(--line)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg><span class="copy-label">Copy</span></button>
+          </div>
+          <p class="req-note">Good for one-off use and CI steps that shouldn't leave a global install behind.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-gh" role="tabpanel" aria-labelledby="tab-gh" hidden>
+          <p class="desc">Install as a first-class <code style="font-family:var(--mono)">gh</code> extension and invoke it as <code style="font-family:var(--mono)">gh pr-media</code>.</p>
+          <div class="tab-cmd">
+            <span class="prompt"><span class="sigil">$</span> gh extension install MatteoSchifano/gh-pr-media</span>
+            <button class="copy-btn" type="button" data-copy="gh extension install MatteoSchifano/gh-pr-media" aria-label="Copy gh extension install command" style="border-left:1px solid var(--line)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg><span class="copy-label">Copy</span></button>
+          </div>
+          <p class="req-note">Then: <code>gh pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42</code></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#top" class="brand" aria-label="pr-media home">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="1.5" width="29" height="29" rx="7" fill="none" stroke="#7FA7E8" stroke-width="1.4"/><path d="M9 12l4 4-4 4" fill="none" stroke="#E6EBF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 20h6" stroke="#E6EBF4" stroke-width="2" stroke-linecap="round"/></svg>
+          pr-media
+        </a>
+        <p>Upload images, GIFs, and videos into GitHub pull requests from a script, a CI job, or an AI agent. No cookies, ever.</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h3>Project</h3>
+          <a href="https://github.com/MatteoSchifano/gh-pr-media" target="_blank" rel="noopener">GitHub repo</a>
+          <a href="https://www.npmjs.com/package/pr-media" target="_blank" rel="noopener">npm package</a>
+          <a href="https://github.com/MatteoSchifano/gh-pr-media/issues" target="_blank" rel="noopener">Issues</a>
+        </div>
+        <div class="foot-col">
+          <h3>Resources</h3>
+          <a href="https://github.com/MatteoSchifano/gh-pr-media/tree/main/skills/pr-media" target="_blank" rel="noopener">Agent skill</a>
+          <a href="https://github.com/MatteoSchifano/gh-pr-media/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT)</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>MIT © 2026 <a href="https://matteoschifano.it" target="_blank" rel="noopener">Matteo Schifano</a></span>
+      <span>Made by <a href="https://matteoschifano.it" target="_blank" rel="noopener">Matteo Schifano</a> · <a href="https://github.com/MatteoSchifano" target="_blank" rel="noopener">@MatteoSchifano</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  document.documentElement.classList.add("js");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Copy buttons ---------- */
+  function wireCopy(btn) {
+    btn.addEventListener("click", function () {
+      var text = btn.getAttribute("data-copy");
+      var label = btn.querySelector(".copy-label");
+      var done = function () {
+        btn.classList.add("copied");
+        if (label) { label.textContent = "Copied"; }
+        setTimeout(function () {
+          btn.classList.remove("copied");
+          if (label) { label.textContent = "Copy"; }
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () { fallback(text); done(); });
+      } else { fallback(text); done(); }
+    });
+  }
+  function fallback(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  document.querySelectorAll("[data-copy]").forEach(wireCopy);
+
+  /* ---------- Reveal on scroll ---------- */
+  var reveals = document.querySelectorAll(".reveal");
+  if (reduceMotion || !("IntersectionObserver" in window)) {
+    reveals.forEach(function (el) { el.classList.add("is-in"); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    reveals.forEach(function (el) { io.observe(el); });
+  }
+
+  /* ---------- Install tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab-btn"));
+  function selectTab(tab) {
+    tabs.forEach(function (t) {
+      var selected = t === tab;
+      t.setAttribute("aria-selected", selected ? "true" : "false");
+      t.tabIndex = selected ? 0 : -1;
+      var panel = document.getElementById(t.getAttribute("aria-controls"));
+      if (panel) { panel.hidden = !selected; }
+    });
+  }
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener("click", function () { selectTab(tab); });
+    tab.addEventListener("keydown", function (e) {
+      var idx = null;
+      if (e.key === "ArrowRight") { idx = (i + 1) % tabs.length; }
+      else if (e.key === "ArrowLeft") { idx = (i - 1 + tabs.length) % tabs.length; }
+      if (idx !== null) { e.preventDefault(); tabs[idx].focus(); selectTab(tabs[idx]); }
+    });
+  });
+
+  /* ---------- Terminal typing ---------- */
+  var out = document.getElementById("term-out");
+  // Each token: {t: text, c: className}. "\n" starts a new line.
+  // The command is typed char-by-char; the output block is faithful to the real
+  // CLI: the `<!-- pr-media -->` marker followed by one `![name](url)` per file.
+  var SEQ = [
+    { type: "type", tokens: [
+      { t: "$ ", c: "t-prompt" },
+      { t: "pr-media add ", c: "t-cmd" },
+      { t: "screenshot.png demo.gif ", c: "t-cmd" },
+      { t: "--pr ", c: "t-flag" },
+      { t: "42", c: "t-cmd" }
+    ]},
+    { type: "wait", ms: 460 },
+    { type: "line", tokens: [ { t: "resolving PR #42 in acme/widgets", c: "t-dim" } ] },
+    { type: "wait", ms: 300 },
+    { type: "line", tokens: [ { t: "validating 2 files … ", c: "t-dim" }, { t: "ok", c: "t-ok" }, { t: "  (screenshot.png 214 KB · demo.gif 1.3 MB)", c: "t-dim" } ] },
+    { type: "wait", ms: 340 },
+    { type: "line", tokens: [ { t: "strategy auto → ", c: "t-dim" }, { t: "hidden-ref", c: "t-flag" } ] },
+    { type: "wait", ms: 300 },
+    { type: "line", tokens: [ { t: "uploaded via Git Data API · posted comment on PR #42 ", c: "t-dim" }, { t: "✓", c: "t-ok" } ] },
+    { type: "wait", ms: 420 },
+    { type: "line", tokens: [ { t: "", c: "t-dim" } ] },
+    { type: "line", tokens: [ { t: "<!-- pr-media -->", c: "t-marker" } ] },
+    { type: "line", tokens: [ { t: "![screenshot.png]", c: "t-md-name" }, { t: "(https://github.com/acme/widgets/blob/8f2a1c9/screenshot.png?raw=true)", c: "t-url" } ] },
+    { type: "line", tokens: [ { t: "![demo.gif]", c: "t-md-name" }, { t: "(https://github.com/acme/widgets/blob/8f2a1c9/demo.gif?raw=true)", c: "t-url" } ] }
+  ];
+
+  function span(tok) {
+    var s = document.createElement("span");
+    s.className = tok.c;
+    s.textContent = tok.t;
+    return s;
+  }
+
+  function renderStatic() {
+    out.textContent = "";
+    SEQ.forEach(function (step) {
+      if (step.type === "wait") { return; }
+      var line = document.createElement("span");
+      line.className = "term-line";
+      step.tokens.forEach(function (tok) { line.appendChild(span(tok)); });
+      line.appendChild(document.createTextNode("\n"));
+      out.appendChild(line);
+    });
+    var cur = document.createElement("span");
+    cur.className = "cursor";
+    out.appendChild(cur);
+  }
+
+  var timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+  function run() {
+    out.textContent = "";
+    var cursor = document.createElement("span");
+    cursor.className = "cursor";
+    out.appendChild(cursor);
+
+    var i = 0;
+    function step() {
+      if (i >= SEQ.length) {
+        // play once: rest on the finished session (replay via the term-bar control)
+        return;
+      }
+      var s = SEQ[i]; i++;
+      if (s.type === "wait") { after(s.ms, step); return; }
+
+      var line = document.createElement("span");
+      line.className = "term-line";
+      out.insertBefore(line, cursor);
+
+      if (s.type === "line") {
+        s.tokens.forEach(function (tok) { line.appendChild(span(tok)); });
+        line.appendChild(document.createTextNode("\n"));
+        after(120, step);
+        return;
+      }
+
+      // s.type === "type": type each token char by char
+      var flat = [];
+      s.tokens.forEach(function (tok) {
+        for (var k = 0; k < tok.t.length; k++) { flat.push({ ch: tok.t[k], c: tok.c }); }
+      });
+      var cur = null, curClass = null, ci = 0;
+      function typeChar() {
+        if (ci >= flat.length) { line.appendChild(document.createTextNode("\n")); after(60, step); return; }
+        var unit = flat[ci]; ci++;
+        if (unit.c !== curClass) { cur = span({ t: "", c: unit.c }); line.appendChild(cur); curClass = unit.c; }
+        cur.textContent += unit.ch;
+        after(38 + Math.random() * 34, typeChar);
+      }
+      typeChar();
+    }
+    step();
+  }
+
+  var replayBtn = document.getElementById("term-replay");
+  function replayTerminal() {
+    clearTimers();
+    if (reduceMotion) { renderStatic(); } else { run(); }
+  }
+  if (replayBtn) { replayBtn.addEventListener("click", replayTerminal); }
+
+  if (out) {
+    if (reduceMotion) { renderStatic(); }
+    else {
+      // start when the terminal enters view (or immediately if already visible)
+      var started = false;
+      var startNow = function () { if (!started) { started = true; run(); } };
+      if ("IntersectionObserver" in window) {
+        var tio = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) { startNow(); tio.disconnect(); } });
+        }, { threshold: 0.35 });
+        tio.observe(out);
+      } else { startNow(); }
+    }
+  }
+
+  /* ---------- Scroll-spy: mark the active section in the nav ---------- */
+  var spyLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-links a[href^="#"]'));
+  var spyMap = {};
+  spyLinks.forEach(function (a) {
+    var id = a.getAttribute("href").slice(1);
+    if (document.getElementById(id)) { spyMap[id] = a; }
+  });
+  var spyIds = Object.keys(spyMap);
+  if (spyIds.length && "IntersectionObserver" in window) {
+    var spyCurrent = null;
+    var setActive = function (id) {
+      if (spyCurrent === id) { return; }
+      spyCurrent = id;
+      spyLinks.forEach(function (a) {
+        var on = a === spyMap[id];
+        a.classList.toggle("is-active", on);
+        if (on) { a.setAttribute("aria-current", "true"); } else { a.removeAttribute("aria-current"); }
+      });
+    };
+    var spyObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { setActive(e.target.id); } });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    spyIds.forEach(function (id) { spyObs.observe(document.getElementById(id)); });
+  }
+})();
+</script>
+</body>
+</html>
