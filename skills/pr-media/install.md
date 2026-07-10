@@ -11,7 +11,7 @@ skills folder using [`degit`](https://github.com/Rich-Harris/degit) (no git
 history, no auth):
 
 ```bash
-npx degit MatteoSchifano/pr-media/skills/pr-media ~/.claude/skills/pr-media
+npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
 
 Restart Claude Code (or reload skills) and the `pr-media` skill will trigger on
@@ -20,7 +20,7 @@ requests like "attach this screenshot to the PR".
 To update later, re-run the same command with `--force`:
 
 ```bash
-npx degit --force MatteoSchifano/pr-media/skills/pr-media ~/.claude/skills/pr-media
+npx degit --force MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
 
 ## Other harnesses (Codex, custom agents, etc.)
@@ -30,7 +30,7 @@ markdown body). Point the same `degit` command at wherever your harness loads
 skills from — only the **destination path** changes:
 
 ```bash
-npx degit MatteoSchifano/pr-media/skills/pr-media <your-skills-dir>/pr-media
+npx degit MatteoSchifano/gh-pr-media/skills/pr-media <your-skills-dir>/pr-media
 ```
 
 Common destinations:
@@ -46,7 +46,7 @@ If your harness reads a single file rather than a directory, copy
 No `npx`/`degit` available? Clone and copy the directory by hand:
 
 ```bash
-git clone https://github.com/MatteoSchifano/pr-media.git /tmp/pr-media
+git clone https://github.com/MatteoSchifano/gh-pr-media.git /tmp/pr-media
 mkdir -p ~/.claude/skills
 cp -R /tmp/pr-media/skills/pr-media ~/.claude/skills/pr-media
 rm -rf /tmp/pr-media
@@ -55,7 +55,7 @@ rm -rf /tmp/pr-media
 Or, with a sparse checkout if you only want the skill directory:
 
 ```bash
-git clone --depth 1 --filter=blob:none --sparse https://github.com/MatteoSchifano/pr-media.git /tmp/pr-media
+git clone --depth 1 --filter=blob:none --sparse https://github.com/MatteoSchifano/gh-pr-media.git /tmp/pr-media
 git -C /tmp/pr-media sparse-checkout set skills/pr-media
 cp -R /tmp/pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
@@ -70,10 +70,10 @@ Any one of:
 npm install -g pr-media
 
 # As a gh extension (then invoke `gh pr-media ...`)
-gh extension install MatteoSchifano/pr-media
+gh extension install MatteoSchifano/gh-pr-media
 
 # From source
-git clone https://github.com/MatteoSchifano/pr-media.git
+git clone https://github.com/MatteoSchifano/gh-pr-media.git
 cd pr-media && npm ci && npm run build
 ```
 

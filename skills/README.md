@@ -24,7 +24,7 @@ Fetch just this skill into your Claude Code skills directory — no npm publish
 required:
 
 ```bash
-npx degit MatteoSchifano/pr-media/skills/pr-media ~/.claude/skills/pr-media
+npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
 
 For other harnesses, manual install, and how to keep the skill updated, see

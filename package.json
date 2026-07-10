@@ -32,11 +32,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MatteoSchifano/pr-media.git"
+    "url": "git+https://github.com/MatteoSchifano/gh-pr-media.git"
   },
-  "homepage": "https://github.com/MatteoSchifano/pr-media#readme",
+  "homepage": "https://github.com/MatteoSchifano/gh-pr-media#readme",
   "bugs": {
-    "url": "https://github.com/MatteoSchifano/pr-media/issues"
+    "url": "https://github.com/MatteoSchifano/gh-pr-media/issues"
   },
   "author": "Matteo Schifano"
 }

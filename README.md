@@ -2,7 +2,7 @@
 
 ![pr-media — upload images & GIFs into GitHub PRs automatically](.github/assets/hero.png)
 
-[![CI](https://github.com/MatteoSchifano/pr-media/actions/workflows/ci.yml/badge.svg)](https://github.com/MatteoSchifano/pr-media/actions/workflows/ci.yml)
+[![CI](https://github.com/MatteoSchifano/gh-pr-media/actions/workflows/ci.yml/badge.svg)](https://github.com/MatteoSchifano/gh-pr-media/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Attach images, GIFs, and videos to a GitHub pull request from a script, a CI job, or an AI agent — no browser cookies, no API that doesn't exist.**
@@ -92,7 +92,7 @@ pr-media ships an [agent skill](./skills/pr-media) that teaches an AI
 coding agent which strategy to pick and how to read `--json` output:
 
 ```bash
-npx degit MatteoSchifano/pr-media/skills/pr-media ~/.claude/skills/pr-media
+npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
 
 Agents should default to `--json` for parseable output, and can combine it
@@ -138,7 +138,7 @@ npx pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42
 ### Install as a `gh` extension
 
 ```bash
-gh extension install MatteoSchifano/pr-media
+gh extension install MatteoSchifano/gh-pr-media
 gh pr-media add ./shot.png --pr-url https://github.com/acme/widgets/pull/42
 ```
 
@@ -200,7 +200,7 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - uses: MatteoSchifano/pr-media/action-cleanup@main
+      - uses: MatteoSchifano/gh-pr-media/action-cleanup@main
 ```
 
 Both deletions are best-effort: a missing ref or release (404) is logged

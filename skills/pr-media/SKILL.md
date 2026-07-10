@@ -45,8 +45,8 @@ strategies with honest tradeoffs and an `auto` fallback chain.
    npx pr-media --version      # fallback if published/resolvable
    ```
    If neither resolves, the CLI is not installed — point the user at the repo
-   (`MatteoSchifano/pr-media`): `npm install -g pr-media`, or
-   `gh extension install MatteoSchifano/pr-media` (then invoke `gh pr-media`),
+   (`MatteoSchifano/gh-pr-media`): `npm install -g pr-media`, or
+   `gh extension install MatteoSchifano/gh-pr-media` (then invoke `gh pr-media`),
    or build from source. This SKILL file only teaches *how* to drive the CLI;
    it does not bundle the CLI itself.
 
@@ -189,5 +189,5 @@ clean up", not an error.
 
 See [install.md](./install.md). One-liner for Claude Code:
 ```bash
-npx degit MatteoSchifano/pr-media/skills/pr-media ~/.claude/skills/pr-media
+npx degit MatteoSchifano/gh-pr-media/skills/pr-media ~/.claude/skills/pr-media
 ```
