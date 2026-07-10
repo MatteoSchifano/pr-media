@@ -32,7 +32,6 @@
     --text-faint:    #8A98AD;
     --accent:        #7FA7E8;
     --accent-bright: #A8C4F2;
-    --accent-deep:   #4E77BE;
     --accent-btm:    #5E88CE;
     --glow:          rgba(127, 167, 232, 0.35);
     --ok:            #6FD3A4;
@@ -537,6 +536,12 @@
   .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
   .js .reveal.is-in { opacity: 1; transform: none; }
 
+  /* Touch: guarantee a 44px hit target for the compact toolbar buttons.
+     Copy buttons (50px) and tabs (46px) already clear the bar. */
+  @media (pointer: coarse) {
+    .term-replay, .cb-copy, .nav-cta { min-height: 44px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .reveal { opacity: 1; transform: none; transition: none; }
@@ -616,7 +621,7 @@
       <div class="terminal reveal">
         <div class="term-bar">
           <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
-          <span class="title" aria-hidden="true">zsh — pr-media</span>
+          <span class="title" aria-hidden="true">zsh · pr-media</span>
           <button class="term-replay" type="button" id="term-replay" aria-label="Replay the terminal animation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"/><path d="M3 20v-5h5"/></svg>
             <span>replay</span>
@@ -748,7 +753,7 @@
       </div>
 
       <figure class="strat-illu reveal">
-        <img src="assets/illu-strategies.webp" width="1600" height="667" loading="lazy" decoding="async" alt="Diagram: png, gif and mp4 files flow through one of three paths — browser, hidden-ref or release — and each path ends in a github.com asset URL.">
+        <img src="assets/illu-strategies.webp" width="1600" height="667" loading="lazy" decoding="async" alt="Diagram: png, gif and mp4 files flow through one of three paths (browser, hidden-ref or release), and each path ends in a github.com asset URL.">
       </figure>
     </div>
   </section>
