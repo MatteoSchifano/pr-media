@@ -449,6 +449,11 @@
   .foot-bottom a { color: var(--text-dim); }
   .foot-bottom a:hover { color: var(--text); }
 
+  /* ---- Illustrations ---- */
+  .illu { margin: 48px auto 0; }
+  .illu img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  .illu figcaption { margin-top: 10px; font-size: 0.8rem; color: var(--text-faint); text-align: center; }
+
   /* ---- Reveal on scroll (gated on .js so content stays visible without JS) ---- */
   .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
   .js .reveal.is-in { opacity: 1; transform: none; }
@@ -659,6 +664,10 @@
           <span style="color:var(--text-faint);margin-left:8px;font-size:0.82rem">outside CI</span>
         </div>
       </div>
+
+      <figure class="illu reveal">
+        <img src="assets/illu-strategies.webp" width="1600" height="667" loading="lazy" decoding="async" alt="Diagram: png, gif and mp4 files flow through one of three paths — browser, hidden-ref or release — and each path ends in a github.com asset URL.">
+      </figure>
     </div>
   </section>
 
@@ -694,6 +703,10 @@
           <p>External commands get their arguments as an argv array, never a shell string. No command injection via file paths, PR URLs, or repo names.</p>
         </div>
       </div>
+
+      <figure class="illu reveal" style="max-width:520px">
+        <img src="assets/illu-security.webp" width="1200" height="1200" loading="lazy" decoding="async" alt="Illustration: a crossed-out session cookie on one side, a short-lived repository-scoped access token on the other, separated by a shield. Caption: we use scoped tokens, we never touch your cookies.">
+      </figure>
     </div>
   </section>
 
@@ -740,6 +753,10 @@
 ]</pre>
         </div>
       </div>
+
+      <figure class="illu reveal" style="max-width:760px">
+        <img src="assets/illu-agents.webp" width="1400" height="1121" loading="lazy" decoding="async" alt="Illustration: an AI agent produces structured JSON with name, url, markdown and strategy fields; the live upload lands as a PR comment while the dry run stays a local preview.">
+      </figure>
     </div>
   </section>
 

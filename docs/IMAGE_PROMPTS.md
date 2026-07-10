@@ -17,7 +17,7 @@ Shared style suffix (append to any prompt below):
 
 ---
 
-## #1 — Hero illustration / og:image
+## #1 — Hero illustration / og:image — RESOLVED ✅ (assets/hero.png)
 - **Where:** Hero section, right column (`.hero-art`), and the page's
   `og:image` / Twitter card. Currently uses the copied `assets/hero.png`.
 - **Size / aspect:** 1672 × 941 (≈16:9). Export at 2x.
@@ -31,7 +31,7 @@ Shared style suffix (append to any prompt below):
   > "hidden-ref" (linked nodes), "release" (tag). Keep the composition airy and
   > balanced. [+ shared style suffix]
 
-## #2 — Strategies concept art (optional accent)
+## #2 — Strategies concept art (optional accent) — RESOLVED ✅ (assets/illu-strategies.webp)
 - **Where:** Above or beside the "Three strategies" section
   (`#strategies`), as an optional decorative band. Can replace the dashed
   `.chain` visual with a richer illustration.
@@ -45,7 +45,7 @@ Shared style suffix (append to any prompt below):
   > accent on the active route, the others in muted grey-blue. Thin connector
   > lines with small arrowheads. [+ shared style suffix]
 
-## #3 — AI agent workflow
+## #3 — AI agent workflow — RESOLVED ✅ (assets/illu-agents.webp)
 - **Where:** "Built for AI agents" section (`#agents`), left or as a
   background motif behind the JSON code block.
 - **Size / aspect:** 1000 × 800 (≈5:4), navy background.
@@ -57,7 +57,7 @@ Shared style suffix (append to any prompt below):
   > upload path. Clean, diagrammatic, azure accent on the JSON and the final
   > embedded image, everything else muted. [+ shared style suffix]
 
-## #4 — Security / cookie-free motif
+## #4 — Security / cookie-free motif — RESOLVED ✅ (assets/illu-security.webp)
 - **Where:** "Security model" section (`#security`), as a small side or
   background illustration reinforcing "never touches a cookie".
 - **Size / aspect:** 900 × 900 (1:1), navy background.
