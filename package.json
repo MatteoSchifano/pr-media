@@ -29,5 +29,14 @@
   },
   "optionalDependencies": {
     "playwright-core": "^1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatteoSchifano/pr-media.git"
+  },
+  "homepage": "https://github.com/MatteoSchifano/pr-media#readme",
+  "bugs": {
+    "url": "https://github.com/MatteoSchifano/pr-media/issues"
+  },
+  "author": "Matteo Schifano"
 }

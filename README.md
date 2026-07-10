@@ -1,6 +1,6 @@
 # pr-media
 
-[![CI](https://github.com/OWNER/pr-media/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/pr-media/actions/workflows/ci.yml)
+[![CI](https://github.com/MatteoSchifano/pr-media/actions/workflows/ci.yml/badge.svg)](https://github.com/MatteoSchifano/pr-media/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Upload images, GIFs, and short videos into GitHub pull requests from the
