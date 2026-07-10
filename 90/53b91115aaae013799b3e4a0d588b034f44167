@@ -1,0 +1,57 @@
+docs/IMAGE_PROMPTS.md
+  s_6d12e569c0e2dd::t_6549cd583ae2fc 1-71
+  s_6d12e569c0e2dd::t_476aed77c39914 72-76
+docs/index.html
+  s_6d12e569c0e2dd::t_19439a684737a4 335-341
+  s_6d12e569c0e2dd::t_546fa85ce8658a 241-249,253
+  s_6d12e569c0e2dd::t_6c8c8df87112b8 751-752
+  s_6d12e569c0e2dd::t_c5a6fd3546775b 13
+  s_6d12e569c0e2dd::t_6101c79214b495 32,36
+  s_6d12e569c0e2dd::t_29a1addd6ecb41 119-137
+  s_6d12e569c0e2dd::t_2fd85bfb7c8180 475-478
+  s_6d12e569c0e2dd::t_d083cb6fdba399 1-6,8-10,12,14,16,18-31,33-35,37-108,110-118,138-148,150-240,250-252,254-272,278,283,288-334,342-343,349,356-364,366-381,383-395,397-423,429-440,442-451,455-474,479-543,552,554-566,574,581,588-674,680,685,690,695-726,728-735,738-745,764-824,826-830,832-846,848-973,975-1008,1016-1028,1054-1058
+  s_6d12e569c0e2dd::t_6c795d017b6afa 567-573,575-580,582-587
+  s_6d12e569c0e2dd::t_f583d736405678 441
+  s_6d12e569c0e2dd::t_851c54b97de5be 1009-1015,1029-1053
+  s_6d12e569c0e2dd::t_77ed1250b92cdd 382
+  s_6d12e569c0e2dd::t_3ab574b1bd403b 727
+  s_6d12e569c0e2dd::t_0d606a57080955 15
+  s_6d12e569c0e2dd::t_a26278bf11bdc6 149
+  s_6d12e569c0e2dd::t_8c67787c790023 847
+  s_6d12e569c0e2dd::t_b3dae2d42574fa 7
+  s_6d12e569c0e2dd::t_bddc38c41ae03b 344-348,350-355
+  s_6d12e569c0e2dd::t_f7fe13e3f12696 365
+  s_6d12e569c0e2dd::t_cd42d836cf2102 825
+  s_6d12e569c0e2dd::t_4b5b009efbbccb 736-737
+  s_6d12e569c0e2dd::t_b9e59c5d6c90c2 831
+  s_6d12e569c0e2dd::t_fe2644e19004a1 425
+  s_6d12e569c0e2dd::t_1f587e1a6a15d0 544-551,553
+  s_6d12e569c0e2dd::t_70523ddd42d50a 109
+  s_6d12e569c0e2dd::t_80ebdb4766acdd 424,426-428
+  s_6d12e569c0e2dd::t_d06c1defefceda 396
+  s_6d12e569c0e2dd::t_2ff5516240935d 452-454
+  s_6d12e569c0e2dd::t_74cefe2d9cddbc 974
+  s_6d12e569c0e2dd::t_24f2b8d51e9292 17
+  s_6d12e569c0e2dd::t_0bfaf1d9193d5c 746-750,753-763
+  s_6d12e569c0e2dd::t_68876f86b0918e 11
+  s_6d12e569c0e2dd::t_2a102ca124aff5 273-277,279-282,284-287
+  s_6d12e569c0e2dd::t_aa90d255ba160a 675-679,681-684,686-689,691-694
+PRODUCT.md
+  s_6d12e569c0e2dd::t_9efc2655b4727e 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9053b91115aaae013799b3e4a0d588b034f44167",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
