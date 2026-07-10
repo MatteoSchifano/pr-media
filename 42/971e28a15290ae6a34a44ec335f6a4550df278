@@ -1,0 +1,20 @@
+docs/index.html
+  s_1d40df5a34b2f1::t_8f4d6a3bce5008 644
+  s_1d40df5a34b2f1::t_0b228e79b6ab32 296,298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "42971e28a15290ae6a34a44ec335f6a4550df278",
+  "prompts": {},
+  "sessions": {
+    "s_1d40df5a34b2f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f8bde2b-3e77-432f-9ec1-c0f90c7ff263",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
