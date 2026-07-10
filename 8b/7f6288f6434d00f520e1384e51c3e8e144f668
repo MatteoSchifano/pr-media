@@ -1,0 +1,29 @@
+package.json
+  s_6d12e569c0e2dd::t_df048064c23408 35,37,39
+skills/README.md
+  s_6d12e569c0e2dd::t_df048064c23408 27
+gh-pr-media
+  s_6d12e569c0e2dd::t_b02f63b5b38989 5-7
+README.md
+  s_6d12e569c0e2dd::t_df048064c23408 5,95,141,203
+skills/pr-media/install.md
+  s_6d12e569c0e2dd::t_df048064c23408 14,23,33,49,58,73,76
+skills/pr-media/SKILL.md
+  s_6d12e569c0e2dd::t_df048064c23408 48-49,192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8b7f6288f6434d00f520e1384e51c3e8e144f668",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
