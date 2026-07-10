@@ -1,0 +1,21 @@
+README.md
+  s_6d12e569c0e2dd::t_82fa919f0662b1 3
+package.json
+  s_6d12e569c0e2dd::t_711773af7c180c 32-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "af08f32f96cc5add423e167fd698b75c3da48c1c",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
