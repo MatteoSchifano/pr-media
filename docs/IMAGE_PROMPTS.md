@@ -57,11 +57,17 @@ Shared style suffix (append to any prompt below):
   > upload path. Clean, diagrammatic, azure accent on the JSON and the final
   > embedded image, everything else muted. [+ shared style suffix]
 
-## #4 — Security / cookie-free motif — RESOLVED ✅ (assets/illu-security.webp)
-- **Where:** "Security model" section (`#security`), as a small side or
-  background illustration reinforcing "never touches a cookie".
-- **Size / aspect:** 900 × 900 (1:1), navy background.
-- **Prompt:**
+## #4 — Security / cookie-free motif — RETIRED ✅ (now hand-authored inline SVG)
+- **Status:** No longer a generated raster. The old `assets/illu-security.webp`
+  had marketing copy baked into the image (poor for a11y, i18n, and it read as
+  AI slop). It has been **removed** and replaced by a hand-authored inline SVG
+  diagram in `docs/index.html` (`.sec-diagram`): a crossed-out session-cookie
+  glyph (muted amber) vs a scoped `gh` token with an expiry clock (azure),
+  separated by a shield. All labels are real HTML/`<text>` — accessible,
+  selectable, translatable, crisp at any resolution, zero external assets.
+- **Where:** "Security model" section (`#security`), on the navy ground below
+  the committed azure block.
+- **Original prompt (kept for reference only):**
   > A minimal security illustration: a browser session cookie icon inside a
   > crossed-out circle on one side, and on the other side a small scoped access
   > token (a key with an expiry clock) glowing in azure. A shield in the center
