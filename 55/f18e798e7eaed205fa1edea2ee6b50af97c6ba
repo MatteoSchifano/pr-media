@@ -1,0 +1,21 @@
+docs/index.html
+  s_6d12e569c0e2dd::t_29113327c00ca2 539-544
+  s_6d12e569c0e2dd::t_6c7a9c32f02b29 756
+  s_6d12e569c0e2dd::t_dd7a4ff4710aa3 624
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "55f18e798e7eaed205fa1edea2ee6b50af97c6ba",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
