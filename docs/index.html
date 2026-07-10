@@ -293,7 +293,9 @@
     font-family: var(--mono); font-size: clamp(0.72rem, 0.9vw, 0.84rem); line-height: 1.7;
     min-height: 220px;
     overflow-x: auto;
+    scrollbar-width: none;
   }
+  .term-body::-webkit-scrollbar { display: none; }
   .term-body pre { margin: 0; white-space: pre; }
   .term-line { display: block; }
   .t-prompt { color: var(--accent); }
@@ -639,7 +641,7 @@
   </section>
 
   <!-- ============ THE PROBLEM ============ -->
-  <section id="problem" class="pace-air" aria-labelledby="problem-title">
+  <section id="problem" aria-labelledby="problem-title">
     <div class="wrap">
       <div class="section-head reveal">
         <span class="kicker"><span class="n">01</span><span class="sep">/</span>the problem</span>
