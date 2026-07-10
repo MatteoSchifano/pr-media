@@ -8,59 +8,15 @@
  * for authentication and no token is ever read, logged, or interpolated.
  */
 
-import { execFile } from 'node:child_process';
 import { copyFile, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { MediaFile, PrContext, UploadResult, UploadStrategy } from '../types.js';
 import { StrategyError } from '../types.js';
-
-interface GhResult {
-  stdout: string;
-  stderr: string;
-}
-
-/** Runs `gh <args>` via `execFile` — arguments are never shell-interpolated. */
-function runGh(args: string[]): Promise<GhResult> {
-  return new Promise((resolve, reject) => {
-    execFile('gh', args, { maxBuffer: 200 * 1024 * 1024 }, (err, stdout, stderr) => {
-      if (err) {
-        reject(Object.assign(err, { stdout, stderr }));
-      } else {
-        resolve({ stdout, stderr });
-      }
-    });
-  });
-}
-
-function describeGhError(err: unknown): string {
-  const e = err as { code?: string; stderr?: string; message?: string };
-  if (e.code === 'ENOENT') {
-    return 'The GitHub CLI (`gh`) is not installed or not on PATH. Install it from https://cli.github.com.';
-  }
-  const stderr = (e.stderr ?? '').trim();
-  return stderr || e.message || String(err);
-}
-
-async function isAvailable(ctx: PrContext): Promise<boolean> {
-  if (ctx.token) return true;
-  try {
-    const { stdout } = await runGh(['auth', 'token']);
-    return stdout.trim().length > 0;
-  } catch {
-    return false;
-  }
-}
+import { describeGhError, hasGhAuth, runGh, toMarkdown } from '../gh.js';
 
 function tagName(prNumber: number): string {
   return `pr-${prNumber}-media`;
-}
-
-function toMarkdown(file: MediaFile, url: string): string {
-  if (file.mime.startsWith('video/')) {
-    return `<video src="${url}" controls></video>`;
-  }
-  return `![${file.name}](${url})`;
 }
 
 async function releaseExists(owner: string, repo: string, tag: string): Promise<boolean> {
@@ -125,7 +81,7 @@ async function withStagedCopies<T>(
 
 export const releaseStrategy: UploadStrategy = {
   name: 'release',
-  isAvailable,
+  isAvailable: hasGhAuth,
 
   async upload(files: MediaFile[], ctx: PrContext): Promise<UploadResult[]> {
     try {

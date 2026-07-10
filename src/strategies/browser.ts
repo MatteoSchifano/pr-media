@@ -35,6 +35,7 @@ import {
   type UploadResult,
   type UploadStrategy,
 } from '../types.js';
+import { toMarkdown } from '../gh.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -86,11 +87,17 @@ const DEFAULT_CDP_URL = 'http://localhost:9222';
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-/** `![name](url)` for images/GIFs, `[name](url)` for anything else. */
-function toMarkdown(file: MediaFile, url: string): string {
-  return file.mime.startsWith('image/')
-    ? `![${file.name}](${url})`
-    : `[${file.name}](${url})`;
+/**
+ * Markdown for a `user-attachments` asset. Images/GIFs → `![name](url)`.
+ * Videos (mp4/mov/webm) → the BARE URL on its own line: GitHub renders a
+ * `user-attachments` video URL inline as a native player only when it stands
+ * alone. A `[name](url)` link (or a `<video>` tag, which GitHub sanitizes for
+ * these URLs) would render as a plain link with no inline player, so we must
+ * emit the bare URL here. `buildMarkdown` already puts each result on its own
+ * line. See {@link toMarkdown} in ../gh.ts for the shared logic.
+ */
+function embedMarkdown(file: MediaFile, url: string): string {
+  return toMarkdown(file, url, 'bare-url');
 }
 
 /** First asset URL found in a textarea value, or `undefined`. */
@@ -265,7 +272,7 @@ async function uploadViaAgentBrowser(
       results.push({
         file,
         url,
-        markdown: toMarkdown(file, url),
+        markdown: embedMarkdown(file, url),
         strategy: 'browser',
       });
 
@@ -445,7 +452,7 @@ async function uploadViaCdp(
       results.push({
         file,
         url,
-        markdown: toMarkdown(file, url),
+        markdown: embedMarkdown(file, url),
         strategy: 'browser',
       });
 

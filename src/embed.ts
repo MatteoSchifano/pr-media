@@ -4,8 +4,8 @@
  * so large markdown blocks never hit argv length limits.
  */
 
-import { execFile } from 'node:child_process';
 import type { PrContext, UploadResult } from './types.js';
+import { describeGhError, runGh } from './gh.js';
 
 const MARKER = '<!-- pr-media -->';
 
@@ -13,39 +13,6 @@ const MARKER = '<!-- pr-media -->';
 export function buildMarkdown(results: UploadResult[]): string {
   const lines = results.map((r) => r.markdown);
   return `${MARKER}\n${lines.join('\n')}`;
-}
-
-/**
- * Runs a `gh` command, optionally piping `input` to its stdin. Rejects with the
- * command's stderr on non-zero exit.
- */
-function runGh(args: string[], input?: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      'gh',
-      args,
-      { maxBuffer: 10 * 1024 * 1024 },
-      (err, stdout, stderr) => {
-        if (err) {
-          const e = err as NodeJS.ErrnoException;
-          if (e.code === 'ENOENT') {
-            reject(
-              new Error(
-                'The GitHub CLI (`gh`) is not installed or not on PATH.',
-              ),
-            );
-            return;
-          }
-          reject(new Error(stderr?.trim() || e.message));
-          return;
-        }
-        resolve(stdout.trim());
-      },
-    );
-    if (input !== undefined) {
-      child.stdin?.end(input);
-    }
-  });
 }
 
 export async function embedInPr(
@@ -68,15 +35,20 @@ export async function embedInPr(
         '--input',
         '-',
       ],
-      JSON.stringify({ body: block }),
+      { stdin: JSON.stringify({ body: block }) },
     );
     return;
   }
 
   // description: read the current body, append our block, write it back.
-  let current = '';
+  //
+  // We must distinguish a body that is legitimately empty/absent (fine — we
+  // just write our block) from a *failed* fetch. Defaulting a failed fetch to
+  // '' would overwrite the PR description with only our new block, silently
+  // destroying the author's text. So on fetch failure we throw instead.
+  let current: string;
   try {
-    const out = await runGh([
+    const { stdout } = await runGh([
       'pr',
       'view',
       String(ctx.prNumber),
@@ -85,10 +57,13 @@ export async function embedInPr(
       '--json',
       'body',
     ]);
-    const parsed = JSON.parse(out) as { body?: string };
+    const parsed = JSON.parse(stdout) as { body?: string };
     current = parsed.body ?? '';
-  } catch {
-    current = '';
+  } catch (err) {
+    throw new Error(
+      'Could not read the current PR description via `gh pr view`; refusing to ' +
+        `overwrite it with only the new media block. ${describeGhError(err)}`,
+    );
   }
 
   const nextBody = current.trim().length > 0 ? `${current}\n\n${block}` : block;
@@ -103,6 +78,6 @@ export async function embedInPr(
       '--body-file',
       '-',
     ],
-    nextBody,
+    { stdin: nextBody },
   );
 }

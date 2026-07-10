@@ -9,10 +9,10 @@
  * no token ever needs to be read, logged, or interpolated into a string.
  */
 
-import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import type { MediaFile, PrContext, UploadResult, UploadStrategy } from '../types.js';
 import { StrategyError } from '../types.js';
+import { describeGhError, hasGhAuth, runGh, toMarkdown } from '../gh.js';
 
 /**
  * Blob content above this size (raw bytes, before base64 inflation) is sent
@@ -21,61 +21,10 @@ import { StrategyError } from '../types.js';
  */
 const ARGV_SAFE_BYTES = 100 * 1024;
 
-interface GhResult {
-  stdout: string;
-  stderr: string;
-}
-
-/**
- * Runs `gh <args>`, optionally feeding `stdinData` to the child's stdin
- * (used for `--input -` JSON payloads). Never shells out — `gh` is invoked
- * directly via `execFile` with every argument passed separately.
- */
-function runGh(args: string[], stdinData?: string): Promise<GhResult> {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      'gh',
-      args,
-      { maxBuffer: 200 * 1024 * 1024 },
-      (err, stdout, stderr) => {
-        if (err) {
-          reject(Object.assign(err, { stdout, stderr }));
-        } else {
-          resolve({ stdout, stderr });
-        }
-      },
-    );
-    if (stdinData !== undefined) {
-      child.stdin?.end(stdinData);
-    } else {
-      child.stdin?.end();
-    }
-  });
-}
-
-function describeGhError(err: unknown): string {
-  const e = err as { code?: string; stderr?: string; message?: string };
-  if (e.code === 'ENOENT') {
-    return 'The GitHub CLI (`gh`) is not installed or not on PATH. Install it from https://cli.github.com.';
-  }
-  const stderr = (e.stderr ?? '').trim();
-  return stderr || e.message || String(err);
-}
-
 function isNotFoundError(err: unknown): boolean {
   const e = err as { stderr?: string };
   const stderr = (e.stderr ?? '').toLowerCase();
   return stderr.includes('404') || stderr.includes('not found');
-}
-
-async function isAvailable(ctx: PrContext): Promise<boolean> {
-  if (ctx.token) return true;
-  try {
-    const { stdout } = await runGh(['auth', 'token']);
-    return stdout.trim().length > 0;
-  } catch {
-    return false;
-  }
 }
 
 function refPath(prNumber: number): string {
@@ -118,10 +67,9 @@ async function createBlob(owner: string, repo: string, file: MediaFile): Promise
 
   const { stdout } =
     data.byteLength > ARGV_SAFE_BYTES
-      ? await runGh(
-          ['api', endpoint, '-X', 'POST', '--input', '-'],
-          JSON.stringify({ encoding: 'base64', content: base64 }),
-        )
+      ? await runGh(['api', endpoint, '-X', 'POST', '--input', '-'], {
+          stdin: JSON.stringify({ encoding: 'base64', content: base64 }),
+        })
       : await runGh(['api', endpoint, '-X', 'POST', '-f', 'encoding=base64', '-f', `content=${base64}`]);
 
   const parsed = JSON.parse(stdout) as { sha?: string };
@@ -154,7 +102,7 @@ async function createTree(
 
   const { stdout } = await runGh(
     ['api', `repos/${owner}/${repo}/git/trees`, '-X', 'POST', '--input', '-'],
-    JSON.stringify(payload),
+    { stdin: JSON.stringify(payload) },
   );
   const parsed = JSON.parse(stdout) as { sha?: string };
   if (!parsed.sha) throw new Error('`gh api` did not return a tree sha.');
@@ -175,7 +123,7 @@ async function createCommit(
   };
   const { stdout } = await runGh(
     ['api', `repos/${owner}/${repo}/git/commits`, '-X', 'POST', '--input', '-'],
-    JSON.stringify(payload),
+    { stdin: JSON.stringify(payload) },
   );
   const parsed = JSON.parse(stdout) as { sha?: string };
   if (!parsed.sha) throw new Error('`gh api` did not return a commit sha.');
@@ -190,28 +138,31 @@ async function upsertRef(
   refAlreadyExists: boolean,
 ): Promise<void> {
   if (refAlreadyExists) {
+    // NOTE: last-writer-wins. The PATCH is a force update with no
+    // compare-and-swap (the API supports `force` but not an expected-old-sha
+    // precondition here), so two runs racing on the SAME PR can interleave:
+    // both read the same parent, each commits on top of it, and whichever
+    // PATCHes second overwrites the ref — dropping the other run's blob(s)
+    // from the ref history. Assets already uploaded as blobs are not lost
+    // (they are content-addressed and still referenced by the emitted URLs),
+    // but the ref tree ends up missing one run's files. Concurrent uploads to
+    // the same PR are expected to be rare; if that changes, add a retry loop
+    // that re-reads the ref and rebuilds the tree on 422/conflict.
     await runGh(
       ['api', `repos/${owner}/${repo}/git/refs/${refPath(prNumber)}`, '-X', 'PATCH', '--input', '-'],
-      JSON.stringify({ sha: commitSha, force: true }),
+      { stdin: JSON.stringify({ sha: commitSha, force: true }) },
     );
   } else {
     await runGh(
       ['api', `repos/${owner}/${repo}/git/refs`, '-X', 'POST', '--input', '-'],
-      JSON.stringify({ ref: `refs/${refPath(prNumber)}`, sha: commitSha }),
+      { stdin: JSON.stringify({ ref: `refs/${refPath(prNumber)}`, sha: commitSha }) },
     );
   }
 }
 
-function toMarkdown(file: MediaFile, url: string): string {
-  if (file.mime.startsWith('video/')) {
-    return `<video src="${url}" controls></video>`;
-  }
-  return `![${file.name}](${url})`;
-}
-
 export const hiddenRefStrategy: UploadStrategy = {
   name: 'hidden-ref',
-  isAvailable,
+  isAvailable: hasGhAuth,
 
   async upload(files: MediaFile[], ctx: PrContext): Promise<UploadResult[]> {
     try {

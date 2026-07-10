@@ -4,11 +4,8 @@
  * shell) so user-provided values are passed as argv, not interpolated.
  */
 
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import type { PrContext } from './types.js';
-
-const execFileAsync = promisify(execFile);
+import { describeGhError, getGhAuthToken, runGh } from './gh.js';
 
 export interface ResolveOptions {
   pr?: string;
@@ -24,45 +21,22 @@ const PR_URL_RE =
 const REPO_RE = /^([^/\s]+)\/([^/\s]+)$/;
 
 /**
- * Runs a `gh` subcommand. Throws a user-friendly error if gh is missing or the
- * user is not authenticated, otherwise surfaces gh's own stderr.
+ * Runs a `gh` subcommand. Throws a user-friendly error (via `describeGhError`)
+ * if gh is missing or the user is not authenticated, otherwise surfaces gh's
+ * own stderr.
  */
 async function gh(args: string[]): Promise<string> {
   try {
-    const { stdout } = await execFileAsync('gh', args, {
-      maxBuffer: 10 * 1024 * 1024,
-    });
+    const { stdout } = await runGh(args, { maxBuffer: 10 * 1024 * 1024 });
     return stdout.trim();
   } catch (err) {
-    const e = err as NodeJS.ErrnoException & { stderr?: string };
-    if (e.code === 'ENOENT') {
-      throw new Error(
-        'The GitHub CLI (`gh`) is not installed or not on PATH. ' +
-          'Install it from https://cli.github.com and run `gh auth login`.',
-      );
-    }
-    const stderr = (e.stderr ?? '').toLowerCase();
-    if (stderr.includes('auth') || stderr.includes('logged in')) {
-      throw new Error(
-        'You are not authenticated with the GitHub CLI. Run `gh auth login` first.',
-      );
-    }
-    throw new Error(
-      `\`gh ${args.join(' ')}\` failed: ${e.stderr?.trim() || e.message}`,
-    );
+    throw new Error(describeGhError(err));
   }
 }
 
 /** Best-effort token lookup. Never logged. Falls back to GITHUB_TOKEN. */
 async function resolveToken(): Promise<string | undefined> {
-  try {
-    const { stdout } = await execFileAsync('gh', ['auth', 'token']);
-    const token = stdout.trim();
-    if (token) return token;
-  } catch {
-    // gh not available or no token — fall through to env.
-  }
-  return process.env.GITHUB_TOKEN || undefined;
+  return (await getGhAuthToken()) ?? process.env.GITHUB_TOKEN ?? undefined;
 }
 
 async function repoMeta(
