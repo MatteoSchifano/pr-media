@@ -1,0 +1,37 @@
+skills/pr-media/install.md
+  s_6d12e569c0e2dd::t_8c9b6ea3abf44d 1-82
+skills/README.md
+  s_6d12e569c0e2dd::t_2908ded26078ad 1-31
+skills/pr-media/SKILL.md
+  s_6d12e569c0e2dd::t_9275b231b6d68e 1-193
+README.md
+  s_6d12e569c0e2dd::t_156a6d8750ce76 33-35,37-41,43-44
+  s_6d12e569c0e2dd::t_7429aac572af49 221-222,224,226,232-234
+  s_6d12e569c0e2dd::t_8833ef569232a6 89-90,96-97
+  s_6d12e569c0e2dd::t_ccd8a857932455 48-50,58,69-70
+  s_6d12e569c0e2dd::t_00315e3e9be5b0 238
+  s_6d12e569c0e2dd::t_d84d6fa4e0752a 122-134
+  s_6d12e569c0e2dd::t_246c593c4ca8d2 154,159,164
+  s_6d12e569c0e2dd::t_0f7058d8a5e85c 172-173,175-179
+  s_6d12e569c0e2dd::t_b21646b06e0c38 209-216
+  s_6d12e569c0e2dd::t_d4e8d5dc0d97dc 6,8-17,21-32,36,42,45-47,57,59-64,75-88,91-95,98-109,139,183,194-196,201,204-205,207,231
+  s_6d12e569c0e2dd::t_0610446a3367a7 227-230
+  s_6d12e569c0e2dd::t_87bdefc0625c04 51-56
+  s_6d12e569c0e2dd::t_ddb72ab46b0e97 65-68,71-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8f47934ec04a19fcde2d8185c67e23b28537541c",
+  "prompts": {},
+  "sessions": {
+    "s_6d12e569c0e2dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f9a758e-6270-4b17-8fd4-78b8472e4ae0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "MatteoSchifano <matvinsch@gmail.com>"
+    }
+  }
+}
