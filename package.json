@@ -1,0 +1,33 @@
+{
+  "name": "pr-media",
+  "version": "0.1.0",
+  "description": "Upload images/GIFs into GitHub PRs from the CLI.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "pr-media": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "commander": "^12"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vitest": "^3",
+    "tsx": "^4",
+    "@types/node": "^20"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1"
+  }
+}

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# gh extension entrypoint for pr-media.
+#
+# Lets you run pr-media as `gh pr-media <args...>` after installing this repo
+# as a gh extension (`gh extension install <owner>/pr-media`). gh executes an
+# extension by invoking the file whose name matches the extension repo
+# (`gh-pr-media`), forwarding all arguments untouched.
+#
+# Prefers the locally built CLI (dist/cli.js) so an installed extension keeps
+# working offline / without npm; falls back to `npx pr-media` if dist/ is
+# missing (e.g. a fresh checkout that hasn't been built yet).
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLI="${SCRIPT_DIR}/dist/cli.js"
+
+if [[ -f "${CLI}" ]]; then
+  exec node "${CLI}" "$@"
+fi
+
+echo "gh-pr-media: dist/cli.js not found, falling back to 'npx pr-media'..." >&2
+exec npx --yes pr-media "$@"
