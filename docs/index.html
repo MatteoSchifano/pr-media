@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f3f0e7">
-  <title>pr-media — Put the proof in the PR</title>
+  <title>pr-media | Put the proof in the PR</title>
   <meta name="description" content="Attach screenshots, GIFs, and videos to GitHub pull requests from your terminal, CI job, or coding agent. No session-cookie extraction.">
   <link rel="canonical" href="https://matteoschifano.github.io/gh-pr-media/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="pr-media — Put the proof in the PR">
+  <meta property="og:title" content="pr-media | Put the proof in the PR">
   <meta property="og:description" content="One CLI command turns local media into review-ready proof inside a GitHub pull request.">
   <meta property="og:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="pr-media — Put the proof in the PR">
+  <meta name="twitter:title" content="pr-media | Put the proof in the PR">
   <meta name="twitter:description" content="Attach media to a GitHub PR without extracting or replaying a session cookie.">
   <meta name="twitter:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23151518'/%3E%3Cpath d='M8 11l5 5-5 5M17 21h7' fill='none' stroke='%23f3f0e7' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25' cy='7' r='3' fill='%23c9f04c'/%3E%3C/svg%3E">
@@ -45,6 +45,9 @@
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-toggle: cubic-bezier(0.65, 0, 0.35, 1);
       --shadow: 0 1.6rem 4rem -2.8rem oklch(15% 0.02 275 / 0.5);
+      --leading-body: 1.62;
+      --leading-reading: 1.7;
+      --leading-dark: 1.72;
     }
 
     * { box-sizing: border-box; }
@@ -66,7 +69,7 @@
       background-position: -1px -1px;
       font-family: var(--sans);
       font-size: 1rem;
-      line-height: 1.5;
+      line-height: var(--leading-body);
       font-kerning: normal;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
@@ -130,7 +133,7 @@
       font-size: 0.74rem;
       font-weight: 700;
       letter-spacing: 0.12em;
-      line-height: 1.2;
+      line-height: 1.4;
       text-transform: uppercase;
     }
 
@@ -145,15 +148,15 @@
       max-width: 16ch;
       font-size: clamp(2.2rem, 7.5vw, 5.5rem);
       font-weight: 760;
-      letter-spacing: -0.065em;
-      line-height: 0.95;
+      letter-spacing: -0.055em;
+      line-height: 0.98;
     }
 
     .section-copy {
       max-width: 38rem;
       color: var(--ink-2);
       font-size: clamp(1rem, 1.5vw, 1.18rem);
-      line-height: 1.65;
+      line-height: var(--leading-reading);
     }
 
     .button {
@@ -273,6 +276,81 @@
       min-height: calc(100svh - 4.25rem);
       padding-block: clamp(3.5rem, 9vw, 8rem) 4rem;
       border-bottom: 1px solid var(--line-strong);
+      background: var(--paper-0);
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 76% 12%, oklch(91% 0.052 266 / 0.7), transparent 30rem),
+        radial-gradient(circle at 10% 80%, oklch(94% 0.028 122 / 0.5), transparent 24rem),
+        var(--paper-0);
+    }
+
+    .hero > .page-shell {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-tattoo {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      color: var(--ink-0);
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .hero-tattoo--desktop { display: none; }
+    .hero-tattoo--mobile { display: block; }
+
+    .hero-tattoo .fine {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .hero-tattoo .fine-blue {
+      fill: none;
+      stroke: var(--blue-0);
+      stroke-width: 1.15;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .hero-tattoo .hairline {
+      fill: none;
+      stroke: var(--line-strong);
+      stroke-width: 0.7;
+      stroke-dasharray: 2 8;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .hero-tattoo .wash {
+      fill: var(--paper-0);
+      stroke: currentColor;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .hero-tattoo .tattoo-ink { opacity: 0.18; }
+    .hero-tattoo .tattoo-blue { opacity: 0.32; }
+    .hero-tattoo .tattoo-whisper { opacity: 0.12; }
+
+    .hero-tattoo text {
+      fill: currentColor;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
 
     .registration {
@@ -334,8 +412,8 @@
       margin-top: 1.35rem;
       font-size: clamp(3.5rem, 15.2vw, 9.6rem);
       font-weight: 780;
-      letter-spacing: -0.085em;
-      line-height: 0.82;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
     }
 
     h1 .proof {
@@ -361,7 +439,7 @@
       color: var(--ink-1);
       font-family: var(--mono);
       font-size: clamp(1rem, 2.3vw, 1.25rem);
-      line-height: 1.55;
+      line-height: 1.66;
     }
 
     .hero-lede strong { color: var(--blue-0); font-weight: 750; }
@@ -756,7 +834,7 @@
       max-width: 31rem;
       margin-top: 0.55rem;
       color: var(--ink-2);
-      line-height: 1.6;
+      line-height: 1.66;
     }
 
     .step-snippet {
@@ -785,6 +863,16 @@
 
     .demo-section .eyebrow::before { background: var(--lime-0); }
     .demo-section .section-copy { color: var(--on-dark-dim); }
+
+    .demo-section .section-copy,
+    .agents .section-copy,
+    .agent-points li,
+    .security .section-copy,
+    .security-item p,
+    .footer-copy {
+      line-height: var(--leading-dark);
+      letter-spacing: 0.01em;
+    }
 
     .demo-meta {
       display: grid;
@@ -874,7 +962,7 @@
 
     .strategy p {
       color: var(--ink-2);
-      line-height: 1.6;
+      line-height: var(--leading-reading);
     }
 
     .strategy code {
@@ -910,8 +998,9 @@
       gap: 0.8rem;
       margin-top: 2rem;
       padding: 1.2rem;
-      border-left: 4px solid var(--rust-0);
+      border: 1px solid oklch(78% 0.07 36);
       background: oklch(95% 0.025 36);
+      box-shadow: inset 0 3px 0 var(--rust-0);
     }
 
     .privacy-note strong {
@@ -1079,8 +1168,8 @@
       max-width: 10ch;
       margin: 1.2rem auto 0;
       font-size: clamp(3rem, 11vw, 8rem);
-      line-height: 0.88;
-      letter-spacing: -0.075em;
+      line-height: 0.92;
+      letter-spacing: -0.062em;
     }
 
     .final-cta .section-copy {
@@ -1182,6 +1271,9 @@
 
     /* Responsive */
     @media (min-width: 42rem) {
+      .hero-tattoo--desktop { display: block; }
+      .hero-tattoo--mobile { display: none; }
+
       .nav-links { display: flex; }
       .nav .button { margin-left: 0; }
 
@@ -1242,6 +1334,9 @@
       }
 
       .security-grid { align-items: start; }
+
+      .hero-tattoo .tattoo-ink { opacity: 0.22; }
+      .hero-tattoo .tattoo-blue { opacity: 0.4; }
     }
 
     @media (pointer: coarse) {
@@ -1295,6 +1390,96 @@
     <section class="hero" id="top" aria-labelledby="hero-title">
       <span class="registration registration-a" aria-hidden="true"></span>
       <span class="registration registration-b" aria-hidden="true"></span>
+      <svg class="hero-tattoo hero-tattoo--desktop" viewBox="0 0 1600 1050" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <!-- Broken guide fields: patchwork instead of a uniform engineering grid. -->
+        <g class="tattoo-whisper hairline">
+          <path d="M0 138H520M0 234H640M86 0V318M214 0V286M352 0V330M490 0V286"/>
+          <path d="M1040 770H1600M920 874H1600M1105 700V1050M1250 742V1050M1406 690V1050M1528 735V1050"/>
+          <path d="M42 610H300M1300 475H1570"/>
+        </g>
+
+        <!-- Sacred geometry: circles and force lines share a single centre. -->
+        <g class="tattoo-ink fine" transform="translate(1268 218)">
+          <circle r="178"/>
+          <circle r="112"/>
+          <circle r="52"/>
+          <path d="M0-178 154 89H-154ZM-112 0 56-97 56 97Z"/>
+          <path d="M-218 0H218M0-218V218M-154-154 154 154M154-154-154 154"/>
+          <path d="M-204-28A206 206 0 0 1-28-204M204 28A206 206 0 0 1 28 204"/>
+        </g>
+        <g class="tattoo-blue fine-blue" transform="translate(1268 218)">
+          <circle r="73" stroke-dasharray="3 9"/>
+          <path d="M0-196v36M0 160v36M-196 0h36M160 0h36"/>
+        </g>
+
+        <!-- Micro architectural study: a tiny, precise facade built from negative space. -->
+        <g class="tattoo-ink fine" transform="translate(116 744)">
+          <path class="wash" d="M0 172V34L86 0l86 34v138Z"/>
+          <path d="M24 172V52h124v120M52 172v-45a34 34 0 0 1 68 0v45"/>
+          <path d="M38 67h30v31H38zM104 67h30v31h-30zM10 34h152M86 0v-30"/>
+          <circle cx="86" cy="-42" r="12"/>
+          <path d="M86-54v24M74-42h24M-18 172h208"/>
+        </g>
+
+        <!-- Flash fragments: small self-contained marks, spaced like an ordered tattoo patchwork. -->
+        <g class="tattoo-ink fine" transform="translate(654 118)">
+          <path class="wash" d="M0 0h54l18 18v74H0z"/>
+          <path d="M54 0v20h20M16 39h40M16 55h31M16 71h24"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(1480 606)">
+          <path d="M-70 0S-40-36 0-36 70 0 70 0 40 36 0 36-70 0-70 0Z"/>
+          <circle r="16"/><circle r="4" fill="currentColor"/>
+        </g>
+        <g class="tattoo-blue fine-blue" transform="translate(830 895)">
+          <path d="m0-52 15 37 37 15-37 15L0 52l-15-37-37-15 37-15Z"/>
+          <circle r="68" stroke-dasharray="2 10"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(1512 900)">
+          <path d="m-42-42 84 84M42-42l-84 84"/>
+          <circle r="58"/><circle r="12"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(72 430)">
+          <path d="M0 0h78M0 12h46M0 24h62"/>
+          <circle cx="92" cy="0" r="8"/><circle cx="92" cy="24" r="8"/>
+        </g>
+
+        <!-- One continuous line ties the otherwise separate flash pieces together. -->
+        <path class="tattoo-blue fine-blue" d="M22 522C190 522 236 402 402 402S642 522 790 522 1002 430 1112 430 1304 520 1578 520" stroke-dasharray="1 11"/>
+        <path class="tattoo-ink fine" d="M34 560C198 560 252 450 402 450S632 570 790 570 1010 478 1120 478 1312 566 1566 566"/>
+
+        <g class="tattoo-ink">
+          <text x="108" y="990">facade study / 01</text>
+          <text x="615" y="92">local artifact</text>
+          <text x="1196" y="458">geometry / review</text>
+          <text x="1370" y="690">observe the proof</text>
+        </g>
+      </svg>
+      <svg class="hero-tattoo hero-tattoo--mobile" viewBox="0 0 390 850" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <g class="tattoo-whisper hairline">
+          <path d="M8 82v204M8 82h94M284 760h98M342 694v156"/>
+          <path d="M18 640h96M282 92h92"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(330 676)">
+          <circle r="82"/><circle r="51"/><circle r="22"/>
+          <path d="M0-82 71 41H-71ZM-51 0l76-44v88Z"/>
+          <path d="M-104 0H104M0-104V104M-72-72 72 72M72-72-72 72"/>
+        </g>
+        <g class="tattoo-blue fine-blue" transform="translate(330 676)">
+          <circle r="34" stroke-dasharray="2 7"/>
+          <path d="M0-94v24M0 70v24M-94 0h24M70 0h24"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(28 606)">
+          <path d="m0-22 7 15 15 7-15 7-7 15-7-15-15-7 15-7Z"/>
+          <circle r="30" stroke-dasharray="2 8"/>
+        </g>
+        <g class="tattoo-ink fine" transform="translate(78 760)">
+          <path class="wash" d="M0 82V17L39 0l39 17v65Z"/>
+          <path d="M11 82V27h56v55M24 82V61a15 15 0 0 1 30 0v21M18 35h14v14H18zM46 35h14v14H46z"/>
+          <path d="M-12 82h102"/>
+        </g>
+        <path class="tattoo-blue fine-blue" d="M-20 732C72 704 118 782 204 754S316 700 410 738" stroke-dasharray="1 9"/>
+        <path class="tattoo-ink fine" d="M-18 756C76 728 120 806 207 778S318 724 410 762"/>
+      </svg>
       <div class="page-shell hero-layout">
         <div class="hero-copy">
           <div class="version-line">
@@ -1303,7 +1488,7 @@
           </div>
           <h1 id="hero-title">Put the <span class="proof">proof</span> in the PR.</h1>
           <p class="hero-lede">
-            Attach screenshots, recordings, and visual artifacts to GitHub pull requests from a script, CI job, or coding agent—<strong>without extracting your session cookie.</strong>
+            Attach screenshots, recordings, and visual artifacts to GitHub pull requests from a script, CI job, or coding agent, <strong>without extracting your session cookie.</strong>
           </p>
 
           <div class="quickstart" aria-label="Install pr-media">
@@ -1413,7 +1598,7 @@
         <div class="reveal">
           <span class="eyebrow">No sleight of hand</span>
           <h2 class="section-heading" id="demo-title">Watch the real command land.</h2>
-          <p class="section-copy" style="margin-top:1.4rem">This is the actual CLI against a live pull request—from the shell prompt to the rendered media comment.</p>
+          <p class="section-copy" style="margin-top:1.4rem">This is the actual CLI against a live pull request: from the shell prompt to the rendered media comment.</p>
           <dl class="demo-meta">
             <div><dt>Input</dt><dd>local image</dd></div>
             <div><dt>Output</dt><dd>GitHub-hosted URL + Markdown</dd></div>
