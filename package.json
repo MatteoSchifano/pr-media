@@ -1,6 +1,6 @@
 {
   "name": "pr-media",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Upload images/GIFs into GitHub PRs from the CLI.",
   "type": "module",
   "license": "MIT",
