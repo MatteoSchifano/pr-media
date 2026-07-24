@@ -5,13 +5,16 @@
 [![CI](https://github.com/MatteoSchifano/gh-pr-media/actions/workflows/ci.yml/badge.svg)](https://github.com/MatteoSchifano/gh-pr-media/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-**Attach images, GIFs, and videos to a GitHub pull request from a script, a CI job, or an AI agent — no browser cookies, no API that doesn't exist.**
+**Secure media for GitHub pull requests.** Attach images, GIFs, and videos from a script, CI job, or AI agent — without extracting a browser session cookie or committing review artifacts to your branch.
 
 GitHub has no public API for PR attachments. The endpoint the web UI uses to
 mint `user-attachments/assets/<uuid>` URLs only accepts a browser session
 cookie — a personal access token gets a flat `422`. The tools that work
 around this do it by stealing that cookie, which hands out a bearer
-credential for your *entire* GitHub account. pr-media doesn't.
+credential for your *entire* GitHub account. pr-media keeps that session in the
+browser and gives you deliberate upload paths with clear visibility trade-offs.
+
+[Read the website](https://matteoschifano.github.io/gh-pr-media/) · [Install as a `gh` extension](#install-as-a-gh-extension)
 
 ## Quickstart
 
@@ -30,18 +33,46 @@ That markdown block is also what gets posted as the PR comment (or appended
 to the description, with `--to description`). Requires `gh auth login` —
 see [Install](#install) below.
 
+## Choose a route, not an upload hack
+
+Every upload path has a visibility trade-off. Choose a strategy explicitly
+when that trade-off matters; in `auto` mode, pr-media tries the viable paths
+for the current environment and falls back after a strategy error:
+
+| Review context | Recommended path | Why |
+|---|---|---|
+| Local work where you want GitHub's native attachment URL | `browser` | Uses the active GitHub UI without reading its cookie store. |
+| Private repository, CI, or an AI agent | `hidden-ref` | Uses `gh`-managed credentials and keeps the URL behind repository access. |
+| Public-repository CI or release-hosted evidence | `release` | Uses GitHub Releases; its URL is public for public repositories and requires repository access for private ones. |
+
+This makes pr-media a good fit when the goal is not merely to host a file, but
+to put review evidence in the right place with a known visibility model.
+
+### How it differs from common upload approaches
+
+| Capability | pr-media | Cookie-replay uploaders | Single-backend uploaders |
+|---|---|---|---|
+| Reads or replays a browser session cookie | Never | Typically required for native PR assets | Not required |
+| Supports repository-scoped private media | Yes, with `hidden-ref` | Depends on the browser session | Depends on the chosen host |
+| Works in CI and coding agents | Yes, via `gh` credentials | Poor fit for unattended environments | Depends on the backend |
+| Offers a route for images, GIFs, and videos | Yes | Varies | Varies |
+
+This is a category comparison, not a benchmark: use the strategy that matches
+your repository and review context.
+
 ## Why pr-media
 
-- **Three strategies, automatic fallback** — no interactive browser? falls
-  back to `gh`-only strategies automatically.
-- **Zero cookies, ever** — the only approach here that doesn't ask you to
-  hand over your session credential (see [Security model](#security-model)).
-- **Works interactive and headless** — same command on your laptop and in
-  a GitHub Actions runner.
+- **Automatic fallback in `auto` mode** — tries browser, hidden-ref, and
+  release strategies in an environment-aware order; an explicitly selected
+  strategy runs on its own.
+- **No session-cookie extraction** — pr-media never asks you to hand over or
+  replay your browser credential (see [Security model](#security-model)).
+- **Works interactive and headless** — the same workflow runs on your laptop,
+  in a GitHub Actions runner, or inside a coding agent.
 - **Light install** — no bundled browser; `playwright-core` is *optional*,
   only needed for the CDP browser backend.
-- **Built for AI agents** — `--json` output, `--dry-run`, and a ready-made
-  agent skill (see [Use with AI agents](#use-with-ai-agents)).
+- **Built for AI agents** — `--json`, `--dry-run`, and a ready-made agent skill
+  make media a reliable, scriptable proof step (see [Use with AI agents](#use-with-ai-agents)).
 - **Cleans up after itself** — a `cleanup` command plus a GitHub Action
   that removes upload artifacts when a PR closes.
 
@@ -81,7 +112,7 @@ pr-media never reads a cookie store and never calls a cookie-store API:
 |--------------|---------------------------------------------------|---------------------------------------------------------------|-------------------------------------------------------------------|----------------|
 | `browser`    | Your own, already-logged-in browser (`agent-browser` or CDP) — session never read | Canonical `github.com/user-attachments/assets/<uuid>`, the same URL the web UI would produce | Inherits the PR's own visibility (GitHub's attachment ACL) | Interactive/local use when you want the exact same URL a human dragging a file in would get |
 | `hidden-ref` | `gh` CLI token (scoped PAT / OAuth / `GITHUB_TOKEN`), via the Git Data API | `github.com/<owner>/<repo>/blob/<sha>/<file>?raw=true` | Inherits the **repo's** visibility (private repo → URL needs repo access) | Default for most workflows, including CI, with no interactive browser required |
-| `release`    | `gh` CLI token, via a dedicated prerelease's assets | `github.com/<owner>/<repo>/releases/download/...`      | **Always public**, even in a private repo — release assets have no separate ACL | CI on public repos, or anywhere you explicitly want a public, cacheable URL |
+| `release`    | `gh` CLI token, via a dedicated prerelease's assets | `github.com/<owner>/<repo>/releases/download/...`      | Public-repository assets are public; private-repository assets require repository access | Public-repo CI, or release storage that matches the repository's access model |
 
 `hidden-ref` and `release` never launch a browser — they go through `gh`'s
 own authenticated API calls end to end.
@@ -219,9 +250,10 @@ browser instead of replaying its credential.
 
 ## Limitations
 
-- `release` asset URLs are **always public**, regardless of the PR's or
-  repo's visibility — GitHub releases have no per-asset ACL. Don't use it
-  for private/sensitive PRs; use `hidden-ref` or `browser` instead.
+- `release` asset URLs follow the repository's access model: assets in public
+  repositories are publicly reachable, while private-repository assets require
+  repository access. Choose `hidden-ref` when you specifically want media
+  stored on a dedicated Git ref instead.
 - `hidden-ref` URLs inherit the *repository's* visibility, not the PR's —
   fine for the common case, not a substitute for a finer-grained ACL.
 - `browser` requires a real, already-authenticated browser session on the

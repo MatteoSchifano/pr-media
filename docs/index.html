@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f3f0e7">
-  <title>pr-media | Put the proof in the PR</title>
-  <meta name="description" content="Attach screenshots, GIFs, and videos to GitHub pull requests from your terminal, CI job, or coding agent. No session-cookie extraction.">
+  <title>pr-media | Secure media for GitHub pull requests</title>
+  <meta name="description" content="Secure, cookie-free media for GitHub pull requests from your terminal, CI job, or coding agent.">
   <link rel="canonical" href="https://matteoschifano.github.io/gh-pr-media/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="pr-media | Put the proof in the PR">
-  <meta property="og:description" content="One CLI command turns local media into review-ready proof inside a GitHub pull request.">
-  <meta property="og:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
+  <meta property="og:title" content="pr-media | Secure media for GitHub pull requests">
+  <meta property="og:description" content="Review-ready screenshots, GIFs, and videos from your terminal, CI, or coding agent — without extracting a session cookie.">
+  <meta property="og:image" content="https://matteoschifano.github.io/gh-pr-media/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="pr-media | Put the proof in the PR">
-  <meta name="twitter:description" content="Attach media to a GitHub PR without extracting or replaying a session cookie.">
-  <meta name="twitter:image" content="https://matteoschifano.github.io/gh-pr-media/assets/hero.png">
+  <meta name="twitter:title" content="pr-media | Secure media for GitHub pull requests">
+  <meta name="twitter:description" content="Review-ready media from your terminal, CI, or coding agent — without extracting a session cookie.">
+  <meta name="twitter:image" content="https://matteoschifano.github.io/gh-pr-media/assets/og.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23151518'/%3E%3Cpath d='M8 11l5 5-5 5M17 21h7' fill='none' stroke='%23f3f0e7' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25' cy='7' r='3' fill='%23c9f04c'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -848,6 +848,108 @@
       white-space: nowrap;
     }
 
+    /* Positioning */
+    .positioning {
+      padding-block: clamp(5rem, 11vw, 9rem);
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--paper-1);
+    }
+
+    .positioning-head {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .positioning-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .positioning-promise {
+      padding: clamp(1.5rem, 4vw, 2.6rem);
+      color: var(--on-dark);
+      background: var(--surface-dark);
+      box-shadow: 0.65rem 0.65rem 0 var(--blue-0);
+    }
+
+    .positioning-promise p {
+      max-width: 28rem;
+      color: var(--on-dark-dim);
+      font-size: 1rem;
+      line-height: var(--leading-dark);
+    }
+
+    .positioning-promise strong { color: var(--lime-0); }
+
+    .positioning-points {
+      display: grid;
+      gap: 0;
+      border-top: 2px solid var(--ink-0);
+    }
+
+    .positioning-point {
+      display: grid;
+      gap: 0.55rem;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .positioning-point h3 {
+      font-family: var(--mono);
+      font-size: 0.84rem;
+      letter-spacing: -0.02em;
+    }
+
+    .positioning-point p { color: var(--ink-2); }
+
+    .positioning-tag {
+      width: fit-content;
+      padding: 0.22rem 0.42rem;
+      color: var(--blue-0);
+      background: var(--blue-2);
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .comparison {
+      margin-top: clamp(2.5rem, 6vw, 4rem);
+      overflow-x: auto;
+    }
+
+    .comparison table {
+      width: 100%;
+      min-width: 40rem;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      text-align: left;
+    }
+
+    .comparison th,
+    .comparison td {
+      padding: 0.88rem 0.8rem;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .comparison th {
+      color: var(--ink-0);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .comparison td:first-child {
+      color: var(--ink-1);
+      font-family: var(--mono);
+    }
+
+    .comparison strong { color: var(--blue-0); }
+
     /* Demo */
     .demo-section {
       padding-block: clamp(5rem, 11vw, 9rem);
@@ -1278,9 +1380,16 @@
       .nav .button { margin-left: 0; }
 
       .workflow-intro,
-      .strategies-head {
+      .strategies-head,
+      .positioning-head {
         grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.72fr);
         align-items: end;
+      }
+
+      .positioning-grid {
+        grid-template-columns: minmax(16rem, 0.82fr) minmax(0, 1.18fr);
+        gap: clamp(2rem, 5vw, 4rem);
+        align-items: start;
       }
 
       .workflow-rail {
@@ -1375,6 +1484,7 @@
       </a>
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#workflow">Workflow</a>
+        <a href="#why">Why pr-media</a>
         <a href="#strategies">Strategies</a>
         <a href="#agents">Agents</a>
         <a href="#security">Security</a>
@@ -1483,12 +1593,12 @@
       <div class="page-shell hero-layout">
         <div class="hero-copy">
           <div class="version-line">
-            <span>CLI / v0.1.0</span>
+            <span>Secure PR media / v0.1.0</span>
             <span class="status"><span class="status-dot" aria-hidden="true"></span>ready for review</span>
           </div>
-          <h1 id="hero-title">Put the <span class="proof">proof</span> in the PR.</h1>
+          <h1 id="hero-title">Secure media.<br>Ready for the <span class="proof">PR.</span></h1>
           <p class="hero-lede">
-            Attach screenshots, recordings, and visual artifacts to GitHub pull requests from a script, CI job, or coding agent, <strong>without extracting your session cookie.</strong>
+            Move local evidence into a GitHub pull request from a script, CI job, or coding agent, <strong>without extracting your session cookie.</strong>
           </p>
 
           <div class="quickstart" aria-label="Install pr-media">
@@ -1511,9 +1621,9 @@
           </div>
 
           <div class="hero-facts" aria-label="Project facts">
-            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>MIT licensed</span>
-            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg>Node 20+</span>
-            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12l3 5-9 13L3 8l3-5Z"/></svg>no bundled browser</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>no cookie-store access</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg>CI + agent ready</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12l3 5-9 13L3 8l3-5Z"/></svg>visibility-aware paths</span>
           </div>
         </div>
 
@@ -1593,6 +1703,56 @@
       </div>
     </section>
 
+    <section class="positioning" id="why" aria-labelledby="why-title">
+      <div class="page-shell">
+        <div class="positioning-head reveal">
+          <div>
+            <span class="eyebrow">Choose a route, not an upload hack</span>
+            <h2 class="section-heading" id="why-title">Media needs the same care as code.</h2>
+          </div>
+          <p class="section-copy">A review artifact can be private, public, or native to GitHub’s composer. pr-media makes the trade-offs explicit; <code>auto</code> selects from the viable routes for the environment.</p>
+        </div>
+
+        <div class="positioning-grid">
+          <aside class="positioning-promise reveal" aria-label="pr-media positioning">
+            <p><strong>One command, three deliberate paths.</strong> Keep a browser session inside the browser, use repo-scoped Git data in private CI, or use GitHub Releases when their repository-level access model is the right fit.</p>
+          </aside>
+
+          <div class="positioning-points reveal">
+            <article class="positioning-point">
+              <span class="positioning-tag">Cookie replay</span>
+              <h3>Convenient native uploads can carry a full-account browser credential.</h3>
+              <p>pr-media drives the active browser UI when needed; it does not read or serialize the cookie that authenticates it.</p>
+            </article>
+            <article class="positioning-point">
+              <span class="positioning-tag">Release storage</span>
+              <h3>Release assets follow the repository’s access model.</h3>
+              <p>They are public in public repositories and require repository access in private ones; hidden refs are a separate, repo-scoped route for review evidence.</p>
+            </article>
+            <article class="positioning-point">
+              <span class="positioning-tag">Automation</span>
+              <h3>CI and coding agents need a contract, not a browser-only workaround.</h3>
+              <p><code>--dry-run</code>, <code>--json</code>, fallback in <code>auto</code> mode, and cleanup make media a dependable review step.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="comparison reveal" aria-label="Comparison with common upload approaches">
+          <table>
+            <thead>
+              <tr><th>Capability</th><th><strong>pr-media</strong></th><th>Cookie-replay uploader</th><th>Single-backend uploader</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Browser session cookie</td><td><strong>Never read or replayed</strong></td><td>Typically required for native PR assets</td><td>Not required</td></tr>
+              <tr><td>Private repository media</td><td><strong>Yes, via hidden ref</strong></td><td>Depends on the browser session</td><td>Depends on the host</td></tr>
+              <tr><td>CI and coding agents</td><td><strong>Uses <code>gh</code> credentials</strong></td><td>Poor fit for unattended work</td><td>Depends on the backend</td></tr>
+              <tr><td>Images, GIFs, and videos</td><td><strong>Supported</strong></td><td>Varies</td><td>Varies</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="demo-section" id="demo" aria-labelledby="demo-title">
       <div class="page-shell demo-grid">
         <div class="reveal">
@@ -1638,7 +1798,7 @@
           </article>
           <article class="strategy reveal">
             <div class="strategy-name"><span class="strategy-index">03</span><h3>release</h3></div>
-            <p>Publishes the file as an asset on a dedicated prerelease. Access follows GitHub’s release and repository permissions.</p>
+            <p>Publishes the file as an asset on a dedicated prerelease. Public repositories produce public asset URLs; private repositories require repository access.</p>
             <div><code>gh release</code><span class="strategy-fit">Best for public CI</span></div>
           </article>
         </div>
