@@ -1,0 +1,21 @@
+docs/index.html
+  s_d387e85710f595::t_34c06627b8d3a6 7-8,11-13,15-17,851-917,1348-1349,1354-1359,1452,1561,1566,1589-1591,1671-1706,1752
+README.md
+  s_d387e85710f595::t_80f32dcf904444 8,14-17,36-49,52-57,60-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "e3d576369009e8a2e5a74ed75a6df232cfb1bb44",
+  "prompts": {},
+  "sessions": {
+    "s_d387e85710f595": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9512-ebfb-7ea0-8e7a-8705abb41ad4",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "ReddoakMatteoSchifano <matteo.schifano@reddoak.com>"
+    }
+  }
+}
